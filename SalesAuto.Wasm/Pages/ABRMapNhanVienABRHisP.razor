@@ -1,0 +1,61 @@
+﻿@page "/ABRMapNhanVienABRHisP"
+@using SalesAuto.Models.ViewModel;
+<h3>Map nhân viên HIS ABR</h3>
+
+<RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@InsertRow" />
+<RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true"
+                EditMode="DataGridEditMode.Single"
+                AllowColumnResize="true"
+                FilterMode="FilterMode.Simple"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                Data="@listChinh" TItem="ABRMapNhanVienABRHISVM" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn Width="50px" TItem="ABRMapNhanVienABRHISVM" Property="ID" Title="ID" Visible="false" />
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="MaNhanVienHIS" Title="Mã NV his">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="ChucDanhHIS" Title="Chức danh HIS">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="TenNhanVienHIS" Title="Họ tên HIS">
+           @* <EditTemplate Context="item">
+                <RadzenDropDown TextBox @bind-Value="item.MaNhanVienHIS" Style="width:100%; display: block" Data="@listNhanVienHIS" ValueProperty="MaNhanVien" TextProperty="TenNhanVien" Name="TenNhanVienHIS" AllowFiltering="true"/>
+                <RadzenRequiredValidator Text="Vui lòng chọn nhân viên" Component="TenNhanVienHIS" Popup="true" />
+            </EditTemplate>*@
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="IDNhanVienABR" Title="" Visible="false">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="MaNhanVienABR" Title="Mã NV ABR">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="ChucDanhABR" Title="Chức danh ABR">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Property="TenNhanVienABR" Title="Họ tên ABR">
+            <EditTemplate Context="item">
+                <RadzenDropDown @bind-Value="item.IDNhanVienABR" Style="display: block" Data="@listNhanVienABR" ValueProperty="ID" TextProperty="TenNhanVien" Name="TenNhanVienABR" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"/>
+                <RadzenRequiredValidator Text="Vui lòng chọn nhân viên" Component="TenNhanVienABR" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+            <Template Context="item">
+                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                </RadzenButton>
+                <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapNhanVienABRHISVM" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+            <Template Context="item">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))" @onclick:stopPropagation="true">
+                </RadzenButton>                
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+

@@ -1,0 +1,134 @@
+﻿@using Radzen.Blazor
+@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Models.ViewModel
+@using SalesAuto.Wasm.Components
+
+@inject IABRClient aBRClient
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject ICommonUI commonUI
+
+<h3>Ngân sách tháng @Thang năm @Nam </h3>
+<div class="card" style="width: 70rem;">
+@if (listChinh!=null)
+{
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="40" AllowSorting="true"
+        EditMode="DataGridEditMode.Single"
+        AllowColumnResize="true"
+        FilterMode="FilterMode.Simple"
+        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+        Data="@listChinh" TItem="ABRNganSachThang"
+        Render="@OnRenderTongHop">
+                <GroupHeaderTemplate>
+                    <strong> 
+                        @context.GroupDescriptor.GetTitle(): @context.Data.Key, @(context.Data.Items.Cast<ABRNganSachThang>().FirstOrDefault().group1)
+                    </strong>
+                </GroupHeaderTemplate>
+        <Columns>
+            <RadzenDataGridColumn Width="100px" TItem="ABRNganSachThang" Property="Muc" Title="Mục">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRNganSachThang" Property="NoiDung" Title="Nội dung">                
+            </RadzenDataGridColumn>            
+            <RadzenDataGridColumn TItem="ABRNganSachThang" Property="SoLuong" Title="Số lượng">   
+                <EditTemplate Context="row">
+                <RadzenNumeric @bind-Value="row.SoLuong" Style="width:100%" Name="SoLuong" />
+                <RadzenRequiredValidator Text="Vui lòng điền số tiền" Component="SoLuong" Popup="true" />
+            </EditTemplate>
+            </RadzenDataGridColumn>      
+            <RadzenDataGridColumn TItem="ABRNganSachThang" Context="aBRDanhMuc" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+            <Template Context="row">
+                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(row))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="row">
+                <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(row))">
+                </RadzenButton>
+                <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(row))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <span>
+        Loading...
+    </span>
+
+}
+</div>
+
+@code {
+
+    [Parameter]
+    public int Thang { get; set; }
+    [Parameter]
+    public int Nam { get; set; }
+    [Parameter]
+    public string MaBenhVien { get; set; } = "";
+    private RadzenDataGrid<ABRNganSachThang> danhMucGrid;
+    private List<ABRNganSachThang> listChinh;
+    protected override async void OnParametersSet()
+    {
+        await LoadDanhSachChiTiet();
+    }
+    private async Task LoadDanhSachChiTiet()
+    {               
+        listChinh = await aBRClient.GetNganSachThang(Thang,Nam, MaBenhVien);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    ABRNganSachThang OldRow = new ABRNganSachThang(); 
+
+    void EditRow(ABRNganSachThang item)
+    {            
+        danhMucGrid.EditRow(item);        
+        GanGiaTri(OldRow, item);
+    }
+
+    void GanGiaTri (ABRNganSachThang OldRow, ABRNganSachThang aBRDanhMuc)
+    {           
+        OldRow.SoLuong = aBRDanhMuc.SoLuong;
+    }
+
+    async Task SaveRow(ABRNganSachThang item)
+    {
+        commonUI.BusyDialog(dialogService,"Saving...");
+        item.MaBenhVien = MaBenhVien;
+        try
+        {
+            bool result = await aBRClient.SaveNganSachThang(item);
+            if (result)
+            {
+                await danhMucGrid.UpdateRow(item);
+                toastService.ShowSuccess("Lưu thành công");
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+    void CancelEdit(ABRNganSachThang item)
+    {         
+        danhMucGrid.CancelEditRow(item);
+        GanGiaTri(item, OldRow);
+        
+    }
+
+    void OnRenderTongHop(DataGridRenderEventArgs<ABRNganSachThang> args)
+    {
+        if(args.FirstRender)
+        {
+            args.Grid.Groups.Add(new GroupDescriptor(){ Property = "Muc", Title = "Nhóm" });
+            StateHasChanged();
+        }
+    }
+}

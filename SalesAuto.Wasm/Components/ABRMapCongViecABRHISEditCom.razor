@@ -1,0 +1,290 @@
+﻿@using SalesAuto.Models.Entities;
+@using SalesAuto.Models.ViewModel;
+@using SalesAuto.Wasm.Services;
+
+@inject IABRClient aBRClient
+@inject ICommonUI commonUI
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject IExportFile exportFile
+@inject IJSRuntime jsRuntime
+
+@if (listChinh != null)
+{
+
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" 
+                    AllowPaging="false" PageSize="20" AllowSorting="true" EditMode="DataGridEditMode.Single"                
+                    AllowColumnResize="true"                
+                    FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Data="@listChinh" TItem="ABRMapCongViecABRHISVM" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+        <Columns>
+            <RadzenDataGridColumn Width="50px" TItem="ABRMapCongViecABRHISVM" Property="ID" Title="ID" />
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="MaCV" Title="Mã HIS">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="200px" TItem="ABRMapCongViecABRHISVM" Property="TenCongViec" Title="Tên công việc HIS">
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenDropDown @bind-Value="aBRDanhMuc.MaCV" Data="@listConViecHis" TextProperty="TenCongViec" ValueProperty="MaCV" Style="width:100%" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFiltering="true">
+                    </RadzenDropDown>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="NhomCongViecThongKe" Title="Nhóm công việc HIS">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="KhoaPhauThuat" Title="Khoa PT">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="LoaiPhauThuat" Title="Loại PT">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="GiaTien" Title="Doanh thu HIS">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="IDDanhMucABR" Title="ID ABR">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="Code" Title="Code ABR">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="200px" TItem="ABRMapCongViecABRHISVM" Property="TenCongViecABR" Title="Ten ABR">
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenDropDown @bind-Value="aBRDanhMuc.IDDanhMucABR" Data="@listDanhMucABR" TextProperty="TenCongViec" ValueProperty="ID" Style="width:100%" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFiltering="true">
+                    </RadzenDropDown>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="QuyRa" Title="Quy đổi">
+                <EditTemplate Context="item">
+                    <RadzenNumeric Format="0.00" @bind-Value="item.QuyRa" Style="width: 100%; display: block" Name="QuyRa" />
+                    <RadzenRequiredValidator Text="Vui lòng điền mức quy đổi" Component="QuyRa" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="DoanhThuTinhABR" Title="Doanh thu ABR" TextAlign="TextAlign.Right">
+                <Template Context="item">
+                    @(item.DoanhThuTinhABR.ToString("##,#"))
+                </Template>
+                <EditTemplate Context="item">
+                    <RadzenNumeric @bind-Value="item.DoanhThuTinhABR" Style="width: 100%; display: block; text-align:left" Name="DoanhThuTinhABR" />
+                    <RadzenRequiredValidator Text="Vui lòng điền mức quy đổi" Component="DoanhThuTinhABR" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="70px" TItem="ABRMapCongViecABRHISVM" Property="TinhTheoDoanhThu" TextAlign="TextAlign.Center" Title="Theo DT">
+                <Template Context="item">
+                    <RadzenCheckBox @bind-Value="item.TinhTheoDoanhThu" Disabled="true" />
+                </Template>
+                <EditTemplate Context="item">
+                    <RadzenCheckBox @bind-Value="item.TinhTheoDoanhThu" Style="display: block" Name="ChuongTrinhRieng" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="NhomABR" Title="Nhóm ABR">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="MucHuongVND" Title="Mức hưởng VND">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="MucHuongPhanTram" Title="Mức hưởng %">
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Context="aBRDanhMuc" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+                <Template Context="aBRDanhMuc">
+                    <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(aBRDanhMuc))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                    <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="note_add" Size="ButtonSize.Small" Click="@(async (args) => await CopyRow(aBRDanhMuc))">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(aBRDanhMuc))">
+                    </RadzenButton>
+                    <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(async (args) => await CancelEdit(aBRDanhMuc))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Context="aBRDanhMuc" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="50px">
+                <Template Context="aBRDanhMuc">
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(async (args) => await DeleteRow(aBRDanhMuc))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(async(args) => await DeleteRow(aBRDanhMuc))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+<button @onclick="Close" class="btn btn-primary">OK</button>
+@code
+{
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+    [Parameter]
+    public List<ABRCongViecHisVM> listConViecHis { get; set;}
+    [Parameter]
+    public List<ABRDanhMuc> listDanhMucABR { get; set; }
+    [Parameter]
+    public List<ABRMapCongViecABRHISVM> listChinh { get; set; }
+    [Parameter]
+    public List<ABRNhom> listNhomABR { get; set; }
+
+    RadzenDataGrid<ABRMapCongViecABRHISVM> danhMucGrid;
+
+    protected override async void OnParametersSet()
+    {
+        if (listConViecHis != null && listDanhMucABR != null && listNhomABR != null)
+        {
+            if (listChinh != null && listChinh.Count > 0)
+            {
+                await danhMucGrid.EditRow(listChinh.FirstOrDefault());
+            }
+        }
+    }
+    
+    bool ThemMoi = false;
+    void InsertRow()
+    {
+        toastService.ShowInfo("Thêm danh muc mói");
+        danhMucGrid.InsertRow(new ABRMapCongViecABRHISVM() { QuyRa = 1 });
+        ThemMoi = true;
+    }
+
+    ABRMapCongViecABRHISVM OldRow = new ABRMapCongViecABRHISVM();
+
+    async Task EditRow(ABRMapCongViecABRHISVM aBRDanhMuc)
+    {
+        _ = danhMucGrid.EditRow(aBRDanhMuc);
+        ThemMoi = false;
+        await GanGiaTri(OldRow, aBRDanhMuc);
+    }
+    async Task CopyRow(ABRMapCongViecABRHISVM aBRDanhMuc)
+    {
+        var newItem = new ABRMapCongViecABRHISVM();
+        newItem.IDDanhMucABR = aBRDanhMuc.IDDanhMucABR;
+        newItem.MaCV = aBRDanhMuc.MaCV;
+        newItem.QuyRa = 1;
+        await danhMucGrid.InsertRow(newItem);
+        ThemMoi = true;
+    }
+
+    async Task GanGiaTri(ABRMapCongViecABRHISVM OldRow, ABRMapCongViecABRHISVM row)
+    {
+        OldRow.Code = row.Code;
+        OldRow.TenCongViec = row.TenCongViec;
+        OldRow.NhomABR = row.NhomABR;
+        OldRow.MucHuongVND = row.MucHuongVND;
+        OldRow.MucHuongPhanTram = row.MucHuongPhanTram;
+        OldRow.QuyRa = row.QuyRa;
+        OldRow.DoanhThuTinhABR = row.DoanhThuTinhABR;
+        OldRow.TinhTheoDoanhThu = row.TinhTheoDoanhThu;
+    }
+
+    async Task SaveRow(ABRMapCongViecABRHISVM row)
+    {
+        ABRMapCongViecABRHIS item = new ABRMapCongViecABRHIS();
+        item.ID = row.ID;
+        item.MaCV = row.MaCV;
+        item.IDDanhMucABR = row.IDDanhMucABR;
+        item.QuyRa = row.QuyRa;
+        item.DoanhThuTinhABR = row.DoanhThuTinhABR;
+        item.TinhTheoDoanhThu = row.TinhTheoDoanhThu;
+        item.RowGuid = row.RowGuid;
+        var result = (await aBRClient.SaveMapCongViecABRHIS(item));
+        if (ThemMoi)
+        {
+            if (result.RowGuid != Guid.Empty)
+            {
+                //await LoadDanhSachMapCongViecABRHIS();
+                row.RowGuid = result.RowGuid;
+                await UpdateInfo(row);
+                await danhMucGrid.UpdateRow(row);
+                toastService.ShowSuccess("Lưu thành công");
+                //await danhMucGrid.LastPage();
+                ThemMoi = false;
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+            }
+        }
+        else
+        {
+            if (result.RowGuid != Guid.Empty)
+            {
+                //await LoadDanhSachMapCongViecABRHIS();
+                row.RowGuid = result.RowGuid;
+                await UpdateInfo(row);
+                await danhMucGrid.UpdateRow(row);
+                toastService.ShowSuccess("Lưu thành công");
+                ThemMoi = false;
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+            }
+
+        }
+    }
+
+    private async Task UpdateInfo(ABRMapCongViecABRHISVM row)
+    {
+        var congViecHis = listConViecHis.Find(x => x.MaCV == row.MaCV);
+        if (congViecHis != null)
+        {
+            row.TenCongViec = congViecHis.TenCongViec;
+            row.NhomCongViecThongKe = congViecHis.NhomCongViecThongKe;
+            row.KhoaPhauThuat = congViecHis.KhoaPhauThuat;
+            row.LoaiPhauThuat = congViecHis.LoaiPhauThuat;
+            row.GiaTien = congViecHis.GiaTien;
+        }
+        var abrCongViec = listDanhMucABR.Find(x => x.ID == row.IDDanhMucABR);
+        if (abrCongViec != null)
+        {
+            row.Code = abrCongViec.Code;
+            row.NhomABR = listNhomABR.Find(x => x.ID == abrCongViec.MaNhomABR)?.TenNhom;
+            row.TenCongViecABR = abrCongViec.TenCongViec;
+            row.MucHuongPhanTram = abrCongViec.MucHuongPhanTram;
+            row.MucHuongVND = abrCongViec.MucHuongVND;
+        }
+
+    }
+
+    async Task OnUpdateRow(ABRMapCongViecABRHISVM row)
+    {
+        //toastService.ShowInfo("Update Row");
+    }
+
+    void OnCreateRow(ABRMapCongViecABRHISVM row)
+    {
+        //toastService.ShowInfo("Ceeate Row");
+    }
+
+    async Task CancelEdit(ABRMapCongViecABRHISVM row)
+    {
+        //toastService.ShowInfo("Cancel Edit");
+        danhMucGrid.CancelEditRow(row);
+        if (!ThemMoi)
+        {
+            await GanGiaTri(row, OldRow);
+        }
+    }
+
+    async Task DeleteRow(ABRMapCongViecABRHISVM row)
+    {
+        bool Result = (bool)await dialogService.Confirm("Are you sure?", "MyTitle", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            bool ketqua = await aBRClient.DeleteMapCongViecABRHIS(row.ID);
+            if (ketqua)
+            {
+                toastService.ShowSuccess("Xóa thành công");
+                listChinh.Remove(row);
+                await danhMucGrid.Reload();
+            }
+            else
+            {
+                toastService.ShowError("Xóa bị lỗi");
+            }
+        }
+
+    }
+    private async Task Export()
+    {
+        var pkg = await exportFile.SaveFile(listChinh);
+        var fileBytes = pkg.GetAsByteArray();
+        pkg.Dispose();
+        var fileName = $"BaoCao.xlsx";
+        await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+    }
+
+    async Task Close() => await BlazoredModal.CloseAsync(ModalResult.Ok(true));
+}

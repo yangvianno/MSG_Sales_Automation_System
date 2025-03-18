@@ -1,0 +1,105 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Models.ViewModel;
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+<div class="card" style="width: 50rem;">
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true"
+                    EditMode="DataGridEditMode.Single"
+                    AllowColumnResize="true"
+                    FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Data="@listNoiLamViec" TItem="ABRNoiLamViecVM"
+                    ColumnWidth="100px">
+        <Columns>
+            <RadzenDataGridColumn Width="20px" TItem="ABRNoiLamViecVM" Property="ID" Title="Chọn" Visible="true">
+                <Template Context="item">
+                    @{
+                        var found = values.Find(x => x.MaNoiLamViec == item.MaNoiLamViec);
+                        if (found != null)
+                        {
+                            <RadzenCheckBox Value=@true Change=@(async (args) => await OnChange(args, item)) TValue="bool"> </RadzenCheckBox>
+
+                        }
+                        else
+                        {
+                            <RadzenCheckBox Value=@false Change=@(async (args) => await OnChange(args, item)) TValue="bool"> </RadzenCheckBox>
+                        }
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="100px" TItem="ABRNoiLamViecVM" Property="TenNoiLamViec" Title="Tên" Visible="true">
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+    <button @onclick="Close" class="btn btn-primary">OK</button>
+</div>
+@code {
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    [Parameter]
+    public UserVM User { get; set; }
+    [Parameter]
+    public List<ABRNoiLamViecVM> listNoiLamViec { get; set; }
+    [Parameter]
+    public List<ABRUserXacNhanNoiLamViec> values { get; set; }
+    [Parameter]
+    public bool NoiThucHien { get; set; }
+
+    RadzenDataGrid<ABRNoiLamViecVM> danhMucGrid;
+
+
+    protected override void OnParametersSet()
+    {
+
+    }
+
+    async Task OnChange(bool value, ABRNoiLamViecVM item)
+    {
+        if (NoiThucHien)
+        {
+            if (value)
+            {
+                var result = await aBRClient.SaveUserXacNhanNoiLamViecThucHien(new ABRUserXacNhanNoiLamViec() { MaNoiLamViec = item.MaNoiLamViec, IDUser = User.Id ?? Guid.Empty });
+                if (result != null)
+                {
+                    values.Add(result);
+                }
+            }
+            else
+            {
+                var found = values.Find(x => x.MaNoiLamViec == item.MaNoiLamViec);
+                if (found != null)
+                {
+                    if (await aBRClient.DeleteUserXacNhanNoiLamViecThucHien(found))
+                    {
+                        values.Remove(found);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (value)
+            {
+                var result = await aBRClient.SaveUserXacNhanNoiLamViecChiDinh(new ABRUserXacNhanNoiLamViec() { MaNoiLamViec = item.MaNoiLamViec, IDUser = User.Id ?? Guid.Empty });
+                if (result != null)
+                {
+                    values.Add(result);
+                }
+            }
+            else
+            {
+                var found = values.Find(x => x.MaNoiLamViec == item.MaNoiLamViec);
+                if (found != null)
+                {
+                    if (await aBRClient.DeleteUserXacNhanNoiLamViecChiDinh(found))
+                    {
+                        values.Remove(found);
+                    }
+                }
+            }
+        }
+        await danhMucGrid.UpdateRow(item);       
+    }
+    async Task Close() => await BlazoredModal.CloseAsync(ModalResult.Ok(true));
+}

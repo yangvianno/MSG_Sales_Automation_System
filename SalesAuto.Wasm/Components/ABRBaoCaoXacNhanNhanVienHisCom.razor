@@ -1,0 +1,93 @@
+﻿@using SalesAuto.Wasm.Services;
+
+@inject IABRClient aBRClient
+<div class="row justify-content-center">
+    <div class="col"></div>
+    <div class="col-10" style="text-align:center">
+        <table>
+            <tr>
+                <td>
+                    <TuNgayDenNgay @bind-TuNgay="TuNgay" @bind-DenNgay="DenNgay" OKClick="Reload" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="col"></div>
+</div>
+
+@if (isLoadding)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenTabs RenderMode="TabRenderMode.Client">
+        <Tabs>
+            <RadzenTabsItem Text="Bảng tổng kết">
+                @if (colinfor != null && listChinh != null)
+                {
+                    <DynGrid listChinh="listChinh" Col="colinfor" />
+                }
+                else
+                {
+                    <span> Không có dữ liệu </span>
+                }
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Chi tiết">
+                @if (colinforChiTiet != null && listChinhChiTiet != null)
+                {
+                    <DynGrid listChinh="listChinhChiTiet" Col="colinforChiTiet" />
+                }
+                else
+                {
+                    <span> Không có dữ liệu </span>
+                }
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+}
+@code {
+
+    private IEnumerable<IDictionary<string, object>> listChinh;
+    public IDictionary<string, object> colinfor;
+
+    private IEnumerable<IDictionary<string, object>> listChinhChiTiet;
+    public IDictionary<string, object> colinforChiTiet;
+
+    private DateTime TuNgay;
+    private DateTime DenNgay;
+
+    private bool isLoadding = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TuNgay = DateTime.Now;
+        DenNgay = DateTime.Now;                
+        await InvokeAsync(StateHasChanged);
+        await Reload();
+    }
+
+    async Task Reload()
+    {
+        isLoadding = true;
+        try
+        {
+            listChinh = await aBRClient.GetBaoCaoXacNhanNhanVienHis(TuNgay, DenNgay);            
+            if (listChinh.Count() > 0)
+            {
+                colinfor = listChinh.First();
+            }            
+            listChinhChiTiet = await aBRClient.GetBaoCaoChiTietXacNhanNhanVienHis(TuNgay, DenNgay);
+            if (listChinhChiTiet.Count() > 0)
+            {
+                colinforChiTiet = listChinhChiTiet.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        isLoadding = false;
+    }
+
+}

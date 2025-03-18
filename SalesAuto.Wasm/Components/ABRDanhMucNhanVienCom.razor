@@ -1,0 +1,186 @@
+﻿@using SalesAuto.Models.ViewModel
+@using SalesAuto.Wasm.Services
+<RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true" EditMode="DataGridEditMode.Single"                 
+                AllowColumnResize="true" 
+                FilterMode="FilterMode.Simple"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                Data="@listChinh" TItem="ABRDanhMucNhanVienVM">
+    <Columns>
+        <RadzenDataGridColumn Width="50px" TItem="ABRDanhMucNhanVienVM" Property="ID" Title="ID">
+             <Template Context="item">
+                    @{
+                        if (item.ID != null && item.ID != Guid.Empty)
+                        {
+                                <RadzenCheckBox Value=@true Change=@(async (args) => await OnChange(args, item)) TValue="bool"> </RadzenCheckBox>
+                        }
+                        else
+                        {
+                                <RadzenCheckBox Value=@false Change=@(async (args) => await OnChange(args, item)) TValue="bool"> </RadzenCheckBox>
+                        }
+                    }
+                </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRDanhMucNhanVienVM" Property="TenCongViec" Title="Tên công việc ABR">           
+        </RadzenDataGridColumn>
+         <RadzenDataGridColumn TItem="ABRDanhMucNhanVienVM" Property="GhiChu" Title="Ghi chú">           
+             <EditTemplate Context="item">
+                <RadzenTextBox @bind-Value="item.GhiChu" Style="width:100%" Name="GhiChu" />               
+            </EditTemplate>
+        </RadzenDataGridColumn>
+      
+        <RadzenDataGridColumn Width="100px" TItem="ABRDanhMucNhanVienVM" Property="MucHuongVND" Title="Mức hưởng VNĐ">
+            <Template Context="item">
+                <span style="text-align:right"> @(item.MucHuongVND.ToString("##,#")) </span>
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenNumeric @bind-Value="item.MucHuongVND" Style="width:100%" Name="MucHuongVND" />
+                <RadzenRequiredValidator Text="Vui lòng điền mức hưởng theo tiền Việt Nam" Component="MucHuongVND" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn Width="100px" TItem="ABRDanhMucNhanVienVM" Property="MucHuongPhanTram" Title="Mức hưởng %">
+            <EditTemplate Context="item">
+                <RadzenNumeric @bind-Value="item.MucHuongPhanTram" Style="width:100%" Name="MucHuongPhanTram" />
+                <RadzenRequiredValidator Text="Vui lòng điền mức hưởng theo phần trăm doanh thu" Component="MucHuongPhanTram" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="100px" TItem="ABRDanhMucNhanVienVM" Property="TyLeGianTiep" Title="% gián tiếp">
+            <EditTemplate Context="item">
+                <RadzenNumeric @bind-Value="item.TyLeGianTiep" Style="width:100%" Name="TyLeGianTiep" />
+                <RadzenRequiredValidator Text="Vui lòng điền tỷ lệ chia khối gián tiếp" Component="TyLeGianTiep" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="70px" TItem="ABRDanhMucNhanVienVM" Property="TinhTheoPoolThucHien" TextAlign="TextAlign.Center" Title="Tính theo pool">
+            <Template Context="item">
+                <RadzenCheckBox @bind-Value="item.TinhTheoPoolThucHien" Disabled="true" />
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenCheckBox @bind-Value="item.TinhTheoPoolThucHien" Style="display: block" Name="TinhTheoPoolThucHien" />
+            </EditTemplate>
+        </RadzenDataGridColumn>      
+        <RadzenDataGridColumn TItem="ABRDanhMucNhanVienVM" Context="aBRDanhMuc" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+            <Template Context="item">
+                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                </RadzenButton>
+                <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>      
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Inject] IABRClient aBRClient { get; set; }
+    [Inject] IToastService toastService { get; set; }
+    [Inject] ICommonUI commonUI { get; set; }        
+    [Inject] DialogService dialogService { get; set; }   
+    [Inject] IJSRuntime jsRuntime { get; set; }
+
+    [Parameter]
+    public Guid IDNhanVien  { get; set; }
+
+    RadzenDataGrid<ABRDanhMucNhanVienVM> danhMucGrid;
+
+
+    private List<ABRDanhMucNhanVienVM> listChinh;        
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            commonUI.BusyDialog(dialogService, "Loading...");                
+            listChinh = await aBRClient.GetDanhSackDanhMucNhanVien(IDNhanVien);      
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+
+        }
+        dialogService.Close();
+    }
+
+    protected override async void OnParametersSet()
+    {
+        //try
+        //{
+        //    commonUI.BusyDialog(dialogService, "Loading...");                
+        //    listChinh = await aBRClient.GetDanhSackDanhMucNhanVien(IDNhanVien);      
+        //    await InvokeAsync(StateHasChanged);
+        //}
+        //catch
+        //{
+
+        //}
+        //dialogService.Close();
+
+    }
+
+    ABRDanhMucNhanVienVM OldRow = new ABRDanhMucNhanVienVM(); 
+
+    void EditRow(ABRDanhMucNhanVienVM aBRDanhMuc)
+    {            
+        danhMucGrid.EditRow(aBRDanhMuc);            
+        GanGiaTri(OldRow, aBRDanhMuc);
+    }
+
+    void GanGiaTri (ABRDanhMucNhanVienVM OldRow, ABRDanhMucNhanVienVM aBRDanhMuc)
+    {        
+        OldRow.TenCongViec = aBRDanhMuc.TenCongViec;        
+        OldRow.MucHuongVND = aBRDanhMuc.MucHuongVND;
+        OldRow.MucHuongPhanTram = aBRDanhMuc.MucHuongPhanTram;                
+    }
+
+    async Task SaveRow(ABRDanhMucNhanVienVM aBRDanhMuc)
+    {
+        commonUI.BusyDialog(dialogService,"Saving...");
+        try
+        {
+            var result = await aBRClient.SaveDanhMucNhanVien(aBRDanhMuc);
+            aBRDanhMuc.ID = result.ID;   
+            toastService.ShowSuccess("Lưu thành công!");
+            await danhMucGrid.UpdateRow(aBRDanhMuc);
+        }   
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            toastService.ShowError("Lưu không thành công!");
+        }
+        dialogService.Close();
+    }
+    void CancelEdit(ABRDanhMucNhanVienVM aBRDanhMuc)
+    {         
+        danhMucGrid.CancelEditRow(aBRDanhMuc);           
+        GanGiaTri(aBRDanhMuc, OldRow);
+           
+    }
+    
+    async Task OnChange(bool value, ABRDanhMucNhanVienVM item)
+    {
+        if (value)
+        {
+            try
+            {                
+                var result = await aBRClient.SaveDanhMucNhanVien(item);
+                item.ID = result.ID;
+            }
+            catch (Exception ex)
+            {
+                Console.Write(ex.Message);
+                toastService.ShowError("Lưu không thành công!");
+            }
+        }
+        else
+        {
+            if (await aBRClient.DeleteDanhMucNhanVien(item))
+            {
+                item.ID = Guid.Empty;
+            }
+        }
+        await danhMucGrid.UpdateRow(item);   
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

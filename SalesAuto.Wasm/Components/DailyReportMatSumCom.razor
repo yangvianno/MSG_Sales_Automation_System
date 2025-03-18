@@ -1,0 +1,118 @@
+﻿@using Blazored.Modal
+@using Blazored.Modal.Services
+@using Blazored.Toast.Services
+@using HelperLib
+@using SalesAuto.Models.ViewModel
+@using System.Globalization
+@using SalesAuto.Wasm.Services
+
+@inject ICommonUI commonUI
+@inject DialogService dialogService
+@inject IToastService toastService
+@inject IBenhVienClient benhVienClient
+@inject IDailyReportsClient dailyReportsClient
+
+<h3>Weekly Reports </h3>
+<table>
+    <tr>
+        <td align="right">
+            <label for="nam">Năm</label>
+        </td>
+        <td align="left">            
+            <input id="nam" type="number" @bind-value=nam @onclick="@loadDanhMucThang" />
+        </td>
+        <td align="right">
+            <label for="tuan">Tuần</label>
+        </td>
+        <td align="left" colspan="2">
+             <RadzenDropDown AllowClear="true" TValue="int" Class="w-100" 
+                            Data=@(TuanVMs.Select(c => new { Tuan = c.Tuan, DienGiai = "Tuần " + c.Tuan +" (" + c.TuNgay.ToString("dd/MM/yyyy") + "-" +c.DenNgay.ToString("dd/MM/yyyy")+")"}))
+                            Change=@(async(args) => await LoadDaily(args)) 
+                            TextProperty="DienGiai" ValueProperty="Tuan"
+                            Value=tuan
+                            />
+
+            
+        </td>
+    </tr>
+</table>
+<div>
+    <RadzenTabs RenderMode="TabRenderMode.Client">
+        <Tabs>
+            <RadzenTabsItem Text="Sumary">
+                @if (!string.IsNullOrEmpty(DaiLyMatSumStr))
+                {
+                    @((MarkupString)DaiLyMatSumStr);
+                }
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="Bệnh viện">
+                @if (!string.IsNullOrEmpty(DaiLyMatSumStr))
+                {
+                    @((MarkupString)DaiLyMatStr);
+                }
+            </RadzenTabsItem>
+
+        </Tabs>
+    </RadzenTabs>
+
+
+</div>
+
+@code {
+
+    private List<TuanVM> TuanVMs { get; set; }
+    private int tuan = 0;
+    private int nam = 0;
+    private int thang = 0;
+    private string MaBenhVien = "O";
+    private string DaiLyMatSumStr;
+    private string DaiLyMatStr;
+    protected override async Task OnInitializedAsync()
+    {        
+        tuan = DateTimeHelp.LayTuan(DateTime.Now.AddDays(-7)).Tuan;
+        nam = DateTimeHelp.LayTuan(DateTime.Now.AddDays(-7)).Nam;
+        TuanVMs = DateTimeHelp.LayTuanTrongNam(nam);
+        MaBenhVien = await benhVienClient.getBenhVienDangLamViec();
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            await GetDailyReportMatSum();
+            await GetDailyReportMat();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+    public Task loadDanhMucThang()
+    {
+        TuanVMs = DateTimeHelp.LayTuanTrongNam(nam);
+        return Task.CompletedTask;
+    }
+
+    public async Task GetDailyReportMatSum()
+    {
+        DaiLyMatSumStr = await  dailyReportsClient.GetDailyReportMatSum();
+    }
+    public async Task GetDailyReportMat()
+    {
+        DaiLyMatStr = await  dailyReportsClient.GetDailyReportMat();
+    }
+    public async Task LoadDaily(object value)
+    {
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            tuan = int.Parse(value.ToString());
+            var Tuan = DateTimeHelp.LayTuan(tuan, nam);
+            DaiLyMatSumStr = await dailyReportsClient.GetDailyReportMatSumTuan(Tuan);
+            DaiLyMatStr = await dailyReportsClient.GetDailyReportMatTuan(Tuan);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("LoadDaily:" + ex.Message);
+        }
+        dialogService.Close();        
+    }
+}

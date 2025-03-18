@@ -1,0 +1,74 @@
+﻿@page "/ABRBangChiTietP"
+@using SalesAuto.Wasm.Components
+<ABRQuaTrinhTinhABR Nam=@DenNgay.Year Thang=@DenNgay.Month ></ABRQuaTrinhTinhABR>
+<h3>Bang chi tiết ABR</h3>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <table>
+                <tr>
+                    <td>
+                        <RadzenLabel Text="Nhóm " />
+                    </td>
+                    <td>
+                        <RadzenDropDown @bind-Value="NhomCongViec" Data="@listNhomCongViec" />
+                    </td>
+                    <td>
+                        <TuNgayDenNgay @bind-TuNgay="TuNgay" @bind-DenNgay="DenNgay" OKClick="LoadDanhSach" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<RadzenButton Text="Excel" Icon="grid_on" Click="Export" Style="margin-bottom:20px" />
+<RadzenDataGrid 
+                AllowFiltering="false" 
+                FilterCaseSensitivity="FilterCaseSensitivity.Default"
+                FilterMode="FilterMode.Simple"
+                AllowPaging="true" 
+                PageSize="40" 
+                AllowSorting="true" 
+                Data="@listChinh" 
+                Count="@count"
+                TItem="IDictionary<string, object>">
+    <Columns>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="NgayThu" Title="Ngày thu">
+            <Template>
+                @DateTime.Parse(context["NgayThu"].ToString()).ToString("dd/MM/yy")
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="HOTENBN" Title="Tên BN" Type="typeof(string)">
+            <Template>
+                @context["HOTENBN"]
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="NhomCongViecThongKe" Title="Nhóm" Type="typeof(string)">
+            <Template>
+                @context["NhomCongViecThongKe"]
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="TenCongViecHIS" Title="Tên dịch vụ HIS" Type="typeof(string)">
+            <Template>
+                @context["TenCongViecHIS"]
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="NhomABR" Title="Nhóm ABR" Type="typeof(string)">
+            <Template>
+                @context["NhomABR"]
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="TenCongViecABR" Title="Tên ABR" Type="typeof(string)">
+            <Template>
+                @context["TenCongViecABR"]
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="TenNhanVienABR" Title="Nhân viên ABR" Type="typeof(string)">
+            <Template>
+                @context["TenNhanVienABR"]
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+

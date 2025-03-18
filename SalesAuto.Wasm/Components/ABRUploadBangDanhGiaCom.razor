@@ -1,0 +1,530 @@
+﻿@using Radzen.Blazor
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Components
+@inject IABRClient aBRClient
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject IABRLoadFileDanhGiaNhanVien aBRLoadFileDanhGiaNhanVien
+@inject ICommonUI commonUI
+
+<ABRQuaTrinhTinhABR Nam=@Nam Thang=@Thang DaXetDuyet1=@DaXetDuyet DaUploadBangDanhGia=@DaUpFileDanhGia ></ABRQuaTrinhTinhABR>
+
+<h3>Up bảng đánh giá</h3>
+<div class="container">
+    @if (!DaXetDuyet)
+    {
+        <div class="row">
+            <div class="col">
+                <table>
+                    <tr>
+                        <td>
+                            <label >
+                                Chọn file
+                                <InputFile OnChange="@OnInputFileChange" accept=".xlsx" />
+                            </label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    }
+    <div class="row">
+        <div class="col">
+            <table>
+                <tr>
+                    <td>
+                        <label>
+                            Tháng
+                        </label>
+                    </td>
+                    <td>
+                        <RadzenNumeric @bind-Value="Thang" TValue="int" Max="12" Min="1" Change="@(async ()=>await LoadDanhMuc())"></RadzenNumeric>
+                    </td>
+                    <td>
+                        <label>
+                            Năm
+                        </label>
+                    </td>
+                    <td>
+                        <RadzenNumeric @bind-Value="Nam" TValue="int" Change="@(async ()=>await LoadDanhMuc())"></RadzenNumeric>
+                    </td>                                        
+                </tr>
+            </table>
+        </div>
+        <div class="col">
+            <RadzenButton Icon="refresh" Size="ButtonSize.Small" Text="Reload" ButtonStyle="ButtonStyle.Info"  Click="@(async ()=>await LoadDanhMuc())"></RadzenButton>
+        </div>
+        <div class="col">
+            <RadzenButton Icon="save" Size="ButtonSize.Small" Text="Lưu đánh giá" ButtonStyle="ButtonStyle.Info" Visible=@(!DaUpFileDanhGia && !DaXetDuyet)  Click="@(async ()=>await SaveBangDanhGia())"></RadzenButton>
+        </div>
+        <div class="col">
+            <RadzenButton Icon="delete" Size="ButtonSize.Small" Text="Xóa" ButtonStyle="ButtonStyle.Danger" Visible=@(DaUpFileDanhGia && !DaXetDuyet) Click="@(async ()=>await DeleteBangDanhGia())"></RadzenButton>
+        </div>   
+    </div>
+    
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            @if (listChinh != null)
+            {
+                @if (DienGiaiPhanLuuy != "")
+                {
+                    <span style="color:red"> @(DienGiaiPhanLuuy)</span>
+                }
+                else
+                {
+                    <span style="color:blue"> Không thay thay đổi so với tháng trước</span>
+                }
+            }
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            @if (listChinh != null)
+            {
+                <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="40" AllowSorting="true"
+                                EditMode="DataGridEditMode.Single"
+                                AllowColumnResize="true"
+                                FilterMode="FilterMode.Simple"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                Data="@listChinh" TItem="ABRDanhGiaNhanVien" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+                    <Columns>
+                        <RadzenDataGridColumn Width="60px" TItem="ABRDanhGiaNhanVien" Property="SoThuTu" TextAlign="TextAlign.Center" Title="STT">
+                            <Template Context="data">
+                                @(listChinh.IndexOf(data) + 1 +"/" +listChinh.Count)
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Width="100px" TItem="ABRDanhGiaNhanVien" Property="MaNhanVien" Title="Mã NV">
+                            <Template Context="row">
+                                @{
+                                    var NhanVien = listABRNhanVien.Find(x => x.MaNhanVien == row.MaNhanVien);
+                                    if (NhanVien == null)
+                                    {
+                                        <span style="color:red"> @row.MaNhanVien </span>
+                                    }
+                                    else
+                                    {
+                                        <span> @row.MaNhanVien </span>
+                                    }
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Width="200px" TItem="ABRDanhGiaNhanVien" Property="HoVaTen" Title="Họ và tên">
+                            <Template Context="row">
+                                @{
+                                    var NhanVien = listABRNhanVien.Find(x => x.MaNhanVien == row.MaNhanVien);
+                                    if (NhanVien == null)
+                                    {
+                                        <span style="color:red"> @row.HoVaTen </span>
+                                    }
+                                    else if (NhanVien.TenNhanVien != row.HoVaTen)
+                                    {
+                                        <span style="color:red"> @row.HoVaTen </span>
+                                    }
+                                    else
+                                    {
+                                        <span> @row.HoVaTen </span>
+                                    }
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ABRDanhGiaNhanVien" Property="PhongBan" Title="Phòng ban">
+                            <Template Context="row">
+                                @{
+                                    var NhanVien = listABRNhanVien.Find(x => x.MaNhanVien == row.MaNhanVien);
+                                    if (NhanVien == null)
+                                    {
+                                        <span style="color:red"> @row.PhongBan </span>
+                                    }
+                                    else if (NhanVien.PhongBan != row.PhongBan)
+                                    {
+                                        <span style="color:red"> @row.PhongBan </span>
+                                    }
+                                    else
+                                    {
+                                        <span> @row.PhongBan </span>
+                                    }
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ABRDanhGiaNhanVien" Property="ChucDanh" Title="Chức danh">
+                            <Template Context="row">
+                                @{
+                                    var NhanVien = listABRNhanVien.Find(x => x.MaNhanVien == row.MaNhanVien);
+                                    if (NhanVien == null)
+                                    {
+                                        <span style="color:red"> @row.ChucDanh </span>
+                                    }
+                                    else if (NhanVien.ChucDanh != row.ChucDanh)
+                                    {
+                                        <span style="color:red"> @row.ChucDanh </span>
+                                    }
+                                    else
+                                    {
+                                        <span> @row.ChucDanh </span>
+                                    }
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ABRDanhGiaNhanVien" Property="LoaiDoiTuong" Title="Loại đối tượng">
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Width="75px" TItem="ABRDanhGiaNhanVien" Property="MucTinhABRTrongThang" Title="ABR">
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ABRDanhGiaNhanVien" Property="GhiChu" Title="ABR">
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="ABRDanhGiaNhanVien" Property="LuuY" Title="Lưu ý">
+                            <Template Context="row">
+                                @{
+                                    <span style="color:red"> @row.LuuY </span>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Width="50px" TItem="ABRDanhGiaNhanVien">
+                            <Template Context="row">
+                                @{
+                                    var NhanVien = listABRNhanVien.Find(x => x.MaNhanVien == row.MaNhanVien);
+                                    if (NhanVien == null)
+                                    {
+                                        <RadzenButton Icon="add" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@(async (args) => await AddABRNhanVien(row))">
+                                        </RadzenButton>
+                                    }
+                                    else
+                                    {
+                                        if (NhanVien.TenNhanVien != row.HoVaTen || NhanVien.ChucDanh != row.ChucDanh
+                                            || NhanVien.PhongBan != row.PhongBan
+                                        )
+                                        {
+                                            <RadzenButton Icon="save" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info" Click="@(async (args) => await SaveABRNhanVien(row))">
+                                            </RadzenButton>
+                                        }
+                                    }
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            }
+        </div>
+    </div>
+</div>
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    private int Thang;
+    private int Nam;
+    private bool DaUpFileDanhGia;
+    private bool DaXetDuyet;
+    private List<ABRDanhGiaNhanVien> listChinh;
+    RadzenDataGrid<ABRDanhGiaNhanVien> danhMucGrid;
+    private List<ABRNhanVien> listABRNhanVien;
+    private string DienGiaiPhanLuuy = "";
+
+    private List<ABRDanhGiaNhanVien> listDanhGiaThangTruoc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var Ngay = DateTime.Now.AddMonths(-1);
+        Thang = Ngay.Month;
+        Nam = Ngay.Year;
+        await LoadDanhMuc();
+    }
+
+    public async Task LoadDanhMuc()
+    {
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            listABRNhanVien = await aBRClient.LayDanhSachABRNhanVien();
+            await LoadTinhTrang();
+            listChinh = await aBRClient.GetBangDanhGiaNhanVien(Thang, Nam);
+            DateTime ThangTruoc = new DateTime(Nam, Thang, 1).AddMonths(-1);
+            listDanhGiaThangTruoc = await aBRClient.GetBangDanhGiaNhanVien(ThangTruoc.Month, ThangTruoc.Year);
+            await TinhPhanLuuY();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        dialogService.Close();
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task LoadTinhTrang()
+    {            
+        DaUpFileDanhGia = await aBRClient.CheckDaUploadBangDanhGia(Thang, Nam);
+        DaXetDuyet = await aBRClient.CheckDaXetDuyet(Thang, Nam,1,"");
+    }
+
+    public async Task TinhPhanLuuY()
+    {
+
+        DienGiaiPhanLuuy = "";
+        int SoNhanVienTangMucHuong = 0;
+        int SoNhanVienGiamMucHuong = 0;
+
+        // kiểm tra tăng giảm mức hưởng
+        foreach (var item in listChinh)
+        {
+            var found = listDanhGiaThangTruoc.FindLast(x => x.MaNhanVien == item.MaNhanVien);
+            if (found != null)
+            {
+                if (item.MucTinhABRTrongThang > found.MucTinhABRTrongThang)
+                {
+                    item.LuuY = "3/ Tăng mức hưởng";
+                    SoNhanVienTangMucHuong++;
+                }
+                else if (item.MucTinhABRTrongThang < found.MucTinhABRTrongThang)
+                {
+                    item.LuuY = "4/ Giảm mức hưởng";
+                    SoNhanVienGiamMucHuong++;
+                }
+
+            }
+        }
+
+
+        // Kiểm tra phần giảm trừ
+        var result = listDanhGiaThangTruoc.Where(p => listChinh.All(p2 => p2.MaNhanVien.Trim() != p.MaNhanVien.Trim()));
+        if (result.Count() > 0)
+        {
+            DienGiaiPhanLuuy = "Giảm :" + result.Count() + " nhân viên";
+        }
+        foreach (var item in result)
+        {
+            item.LuuY = "1/ Giảm trừ";
+        }
+        listChinh.AddRange(result);
+        // Kiểm tra tăng
+
+        var result2 = listChinh.Where(p => listDanhGiaThangTruoc.All(p2 => p2.MaNhanVien != p.MaNhanVien));
+        if (result2.Count() > 0)
+        {
+            if (DienGiaiPhanLuuy != "")
+            {
+                DienGiaiPhanLuuy += "; ";
+            }
+            DienGiaiPhanLuuy += "Tăng :" + result.Count() + " nhân viên";
+        }
+
+        foreach (var item in result2)
+        {
+            item.LuuY = "2/ Thêm";
+        }
+
+        if (SoNhanVienTangMucHuong > 0)
+        {
+            if (DienGiaiPhanLuuy != "")
+            {
+                DienGiaiPhanLuuy += "; ";
+            }
+            DienGiaiPhanLuuy += "Số nhân viên tăng mức hưởng :" + SoNhanVienTangMucHuong;
+        }
+
+        if (SoNhanVienGiamMucHuong > 0)
+        {
+            if (DienGiaiPhanLuuy != "")
+            {
+                DienGiaiPhanLuuy += "; ";
+            }
+            DienGiaiPhanLuuy += "Số nhân viên giảm mức hưởng :" + SoNhanVienGiamMucHuong;
+        }
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            Console.WriteLine($"{e.File.Name} value changed");
+            listChinh = await aBRLoadFileDanhGiaNhanVien.loadFile(e.File.OpenReadStream());
+            DaUpFileDanhGia = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+        await InvokeAsync(StateHasChanged);
+
+    }
+
+    void InsertRow()
+    {
+        toastService.ShowInfo("Thêm danh muc mói");
+        danhMucGrid.InsertRow(new ABRDanhGiaNhanVien());
+        ThemMoi = true;
+    }
+    async Task OnUpdateRow(ABRDanhGiaNhanVien item)
+    {
+    }
+
+    void OnCreateRow(ABRDanhGiaNhanVien item)
+    {
+    }
+
+    async Task AddABRNhanVien(ABRDanhGiaNhanVien item)
+    {
+        commonUI.BusyDialog(dialogService, "Đang lưu...");
+        try
+        {
+            var abrnv = new ABRNhanVien();
+            abrnv.MaNhanVien = item.MaNhanVien;
+            abrnv.TenNhanVien = item.HoVaTen;
+            abrnv.HuongGianTiep = true;
+            abrnv.HuongTrucTiep = false;
+            abrnv.ChucDanh = item.ChucDanh;
+            abrnv.PhongBan = item.PhongBan;
+            if (await aBRClient.SaveABRNhanVien(abrnv))
+            {
+                toastService.ShowInfo("Thêm " + item.HoVaTen + " thành công");
+                listABRNhanVien = await aBRClient.LayDanhSachABRNhanVien();
+                await danhMucGrid.UpdateRow(item);
+
+            }
+            else
+            {
+                toastService.ShowError("Thêm " + item.HoVaTen + " bị lỗi");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+
+    async Task SaveABRNhanVien(ABRDanhGiaNhanVien item)
+    {
+        commonUI.BusyDialog(dialogService, "Đang lưu...");
+        try
+        {
+
+            var abrnv = listABRNhanVien.Find(x => x.MaNhanVien == item.MaNhanVien);
+            if (abrnv != null)
+            {
+                abrnv.TenNhanVien = item.HoVaTen;
+                abrnv.ChucDanh = item.ChucDanh;
+                abrnv.PhongBan = item.PhongBan;
+                if (await aBRClient.SaveABRNhanVien(abrnv))
+                {
+                    toastService.ShowInfo("Cập nhật thông tin " + item.HoVaTen + " thành công");
+                    listABRNhanVien = await aBRClient.LayDanhSachABRNhanVien();
+                    await danhMucGrid.UpdateRow(item);
+
+                }
+                else
+                {
+                    toastService.ShowError("Thêm " + item.HoVaTen + " bị lỗi");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+
+    ABRDanhGiaNhanVien OldRow = new ABRDanhGiaNhanVien();
+    private bool ThemMoi;
+
+    void EditRow(ABRDanhGiaNhanVien item)
+    {
+
+    }
+
+    private async Task CopyRow(ABRDanhGiaNhanVien item)
+    {
+
+    }
+
+    public async Task DeleteBangDanhGia()
+    {
+        bool Result = true;
+        Result = (bool)await dialogService.Confirm("Bạn đồng ý xóa đánh giá tháng " + Thang + " năm " + Nam + "?", "Xác nhận", new ConfirmOptions() { OkButtonText = "Đồng ý", CancelButtonText = "Không" });
+        if (Result)
+        {
+            commonUI.BusyDialog(dialogService, "Loading...");
+            try
+            {
+                var result = await aBRClient.DeleteBangDanhGiaNhanVien(Thang, Nam);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            dialogService.Close();
+            await LoadDanhMuc();
+        }
+    }
+
+    async Task SaveRow(ABRDanhGiaNhanVien item)
+    {
+        var nhanVien = listABRNhanVien.Find(x => x.MaNhanVien == item.MaNhanVien);
+        
+        if (nhanVien != null && item.LuuY != "1/ Giảm trừ")
+        {
+            item.Thang = Thang;
+            item.Nam = Nam;
+            bool result = await aBRClient.ABRSaveDanhGiaNhanVien(item);
+            if (result)
+            {
+                await danhMucGrid.UpdateRow(item);
+            }
+            else
+            {
+                toastService.ShowError("Luu " + item.HoVaTen + " Bị lỗi");
+            }
+        }
+    }
+
+    void CancelEdit(ABRDanhGiaNhanVien item)
+    {
+        danhMucGrid.CancelEditRow(item);
+
+    }
+
+    async Task DeleteRow(ABRDanhGiaNhanVien item)
+    {
+
+
+    }
+
+    async Task SaveBangDanhGia()
+    {
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự muốn lưu toàn bộ?", "Lưu", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            await danhMucGrid.LastPage();
+            int SoTrang = danhMucGrid.CurrentPage;
+            for (int i = 0; i <= SoTrang; i++)
+            {
+                await danhMucGrid.GoToPage(i);
+                await LuuDanhGiaToanTrang();
+            }
+        }
+        toastService.ShowInfo("Lưu thành công!");
+    }
+    public async Task LuuDanhGiaToanTrang()
+    {
+        //int start = danhMucGrid.CurrentPage * danhMucGrid.PageSize;
+        //int end = ((danhMucGrid.CurrentPage+1) * danhMucGrid.PageSize<= danhMucGrid.Count? (danhMucGrid.CurrentPage + 1) * danhMucGrid.PageSize: danhMucGrid.Count);
+        commonUI.BusyDialog(dialogService, "Đang lưu...");
+        try
+        {
+            foreach (var item in danhMucGrid.PagedView)
+            {
+                await SaveRow(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+
+}

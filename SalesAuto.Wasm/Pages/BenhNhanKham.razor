@@ -1,0 +1,273 @@
+﻿@page "/benhnhansList"
+@using SalesAuto.Wasm.Components
+@attribute [Authorize]
+
+@if (benhNhanSM != null)
+{
+    <div class="row">
+        <EditForm Model="@benhNhanSM" OnSubmit="@SearchAll">
+            <div class="row">
+                <div class="col">
+                    <label>Mã bệnh viện</label><br />
+                    <InputSelect class="form-control" @bind-Value="@benhNhanSM.MaBenhVien">
+                        <option value=""> All</option>
+                        @if (benhVienVms != null)
+                            {
+                                foreach (var item in benhVienVms)
+                                {
+                                <option value="@item.MaBenhVien"> @item.TenBenhVien</option>
+                                }
+
+                            }
+                    </InputSelect>
+                </div>
+                <div class="col">
+                    <label>Từ Ngày</label><br />
+                    <InputDate class="from-control" @bind-Value="@benhNhanSM.TuNgay"></InputDate>
+                </div>
+                <div class="col">
+                    <label>Đến Ngày</label><br />
+                    <InputDate class="from-control" @bind-Value="@benhNhanSM.DenNgay"></InputDate>
+                </div>
+                <div class="col">
+                    <label>Nguồn</label><br />
+                    <InputText class="from-control" @bind-Value="@benhNhanSM.Nguon"></InputText>
+                </div>
+                <div class="col">
+                    <label>Loại</label><br />
+                    <InputSelect class="form-control" @bind-Value="@benhNhanSM.Loai">
+                        <option></option>
+                        <option>Khám</option>
+                        <option>Phẫu thuật</option>
+                    </InputSelect>
+                </div>
+                <div class="col">
+                    <br />
+                    <button type="submit" class="btn btn-success"> Tìm </button>
+                </div>
+                <div class="col">
+                    @if (isDownLoadStarted == 2)
+                    {
+                        /*
+                        <a href="BenhNhan.xlxs">
+                            Download dirrect
+                        </a>
+                        */
+                        <br />
+                    }
+
+                    else
+                    {
+                        <br />
+                    }
+                    <button class="btn btn-success" @onclick="@(async()=> await DownLoadExcel())"> Download </button>
+
+                </div>
+            </div>
+        </EditForm>
+
+    </div>
+}
+
+<h1>Sum theo bệnh viện</h1>
+
+@if (benhVienKhams == null)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">...</span>
+    </div>
+}
+else
+{
+    <div class="row mt-4">
+        @if (benhVienKhams.Count() <= 0)
+        {
+            <div>
+                Không tìm thấy
+            </div>
+        }
+        else
+        {
+            <table class="table table-sm">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">
+                            Mã BV
+                        </th>
+                        <th scope="col">
+                            Tên Bệnh viện
+                        </th>
+                        <th scope="col">
+                            Loại
+                        </th>
+                        <th scope="col">
+                            Số lượng
+                        </th>
+                        <th scope="col">
+                            Giảm giá
+                        </th>
+                        <th scope="col">
+                            Doanh thu
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in benhVienKhams)
+                    {
+                        <tr>
+                            <td>
+                                @item.MaBenhVien
+                            </td>
+                            <td>
+                                @item.TenBenhVien
+                            </td>
+                            <td>
+                                @item.Loai
+                            </td>
+                            <td>
+                                @item.SoLuong
+                            </td>
+                            <td>
+                                @item.GiamGia
+                            </td>
+                            <td>
+                                @item.DoanhThu
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+
+            </table>
+        }
+    </div>
+}
+
+<h1>Chi tiết</h1>
+
+@if (benhNhanKhams == null)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">...</span>
+    </div>
+}
+else
+{
+    <div class="row mt-4">
+        @if (benhNhanKhams.Count <= 0)
+        {
+            <div>
+                Không tìm thấy
+            </div>
+        }
+        else
+        {
+            <div>
+                <Pagination metaData="metaData" Spread="20" SelectedPage="SelectedPage">
+                </Pagination>
+            </div>
+            <table class="table table-bordered">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">
+                            Mã BV
+                        </th>
+                        <th scope="col">
+                            Tên Bệnh viện
+                        </th>
+                        <th scope="col">
+                            Ngày
+                        </th>
+                        <th scope="col">
+                            Tên dịch vụ
+                        </th>
+                        <th scope="col">
+                            Loại PT
+                        </th>
+                        <th scope="col">
+                            Tên Lead
+                        </th>
+                        <th scope="col">
+                            Tên bệnh nhân
+                        </th>
+                        <th scope="col">
+                            Năm sinh
+                        </th>
+                        <th scope="col">
+                            Điện thoại
+                        </th>
+                        <th scope="col">
+                            Địa chỉ
+                        </th>
+                        <th scope="col">
+                            Nguồn
+                        </th>
+                        <th scope="col">
+                            Loại
+                        </th>
+                        <th scope="col">
+                            Giảm giá
+                        </th>
+                        <th scope="col">
+                            Doanh thu
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in benhNhanKhams)
+                    {
+                        <tr>
+                            <td>
+                                @item.MaBenhVien
+                            </td>
+                            <td>
+                                @item.TenBenhVien
+                            </td>
+                            <td>
+                                @item.Ngay.ToString("dd/MM/yyyy")
+                            </td>
+                            <td>
+                                @item.TenDichVu
+                            </td>
+                            <td>
+                                @item.LoaiPT
+                            </td>
+                            <td>
+                                @item.TenLead
+                            </td>
+                            <td>
+                                @item.TenBenhNhan
+                            </td>
+                            <td>
+                                @item.NamSinh
+                            </td>
+                            <td>
+                                @item.DienThoai
+                            </td>
+                            <td>
+                                @item.DiaChi
+                            </td>
+                            <td>
+                                @item.Nguon
+                            </td>
+                            <td>
+                                @item.Loai
+                            </td>
+                            <td>
+                                @item.GiamGia
+                            </td>
+                            <td>
+                                @item.DoanhThu
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+            </table>
+            <div>
+                <Pagination metaData="metaData" Spread="20" SelectedPage="SelectedPage">
+                </Pagination>
+            </div>
+        }
+    </div>
+}

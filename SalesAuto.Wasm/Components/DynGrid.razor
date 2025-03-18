@@ -1,0 +1,55 @@
+﻿@using SalesAuto.Wasm.Services
+@inject IExportFile exportFile
+@inject IJSRuntime jsRuntime
+
+@if (listChinh != null)
+{
+<RadzenButton Text="Excel" Icon="grid_on" Click="Export" Style="margin-bottom:20px" />
+<RadzenDataGrid                 
+                AllowPaging="true" 
+                PageSize="40" 
+                AllowColumnResize="true"
+                Data="@listChinh" 
+                TItem="IDictionary<string, object>">
+    <Columns>
+        @if (Col != null)
+        {
+            @foreach (var key in Col.Keys)
+            {
+                <RadzenDataGridColumn TItem="IDictionary<string, object>" Property="@key" Title="@key">
+                    <Template Context="data">
+                            <span>@if (data[key] != null)
+                                {
+                                    @(data[key].ToString());
+                                }
+                            </span>
+                    </Template>
+                </RadzenDataGridColumn>
+            } 
+        }
+    </Columns>
+</RadzenDataGrid>
+}
+else
+{
+<span> Notthingso show  </span>
+}
+    @code {
+
+        [Parameter]
+        public IEnumerable<IDictionary<string, object>> listChinh { get; set; }
+
+        [Parameter]
+        public IDictionary<string, object> Col { get; set; }
+
+
+
+        private async Task Export()
+        {
+            var pkg = await exportFile.SaveFile(listChinh);
+            var fileBytes = pkg.GetAsByteArray();
+            pkg.Dispose();
+            var fileName = $"BaoCao.xlsx";
+            await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+        }
+    }

@@ -1,0 +1,102 @@
+﻿@page "/ChangePassP"
+@using SalesAuto.Models.ViewModel
+@using SalesAuto.Wasm.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IToastService toastService
+@inject  NavigationManager navigationManager
+@inject  IJSRuntime jsRuntime
+
+@if (showError)
+{
+    <div class="alert alert-danger">
+        <p>
+            @errorMessage;
+        </p>
+    </div>
+}
+<div class="row justify-content-md-center">    
+    <div class="col" />
+    <div class="col align-middle">            
+            <RadzenFieldset Text="Đổi pass">
+                 <RadzenTemplateForm TItem="ChangePassVM" Data=@model Submit=@OnSubmit InvalidSubmit=@OnInvalidSubmit>   
+                    <div class="row" style="margin-bottom: 38px">
+                        <div class="col-4 align-right ">
+                            <RadzenLabel Text="Mật khẩu đang dùng" />
+                        </div>
+                        <div class="col-8">
+                            <RadzenPassword  Name="MatKhauCu" @bind-Value=@model.MatKhauCu />
+                            <RadzenRequiredValidator Component="MatKhauCu" Text="Vui lòng nhập mật khẩu đang dùng" Style="position: absolute"/>
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 38px">
+                        <div class="col-4">
+                            <RadzenLabel Text="Mật khẫu mới" />
+                        </div>
+                        <div class="col-8">
+                            <RadzenPassword  Name="MatKhauMoi" @bind-Value=@model.MatKhauMoi />
+                            <RadzenRequiredValidator Component="MatKhauMoi" Text="Vui lòng nhập mật khẩu mới" Style="position: absolute"/>
+                            <RadzenLengthValidator Component="MatKhauMoi"  Min="6" Text="Nhập tối thiểu 6 ký tự"  Style="position: absolute" />
+                            <RadzenRegexValidator Component="MatKhauMoi" Text="Vui lòng nhập 1 số!" Pattern="^(?=.*\d).{1,}$" />
+
+                        </div>
+                    </div>
+                    <div class="row" style="margin-bottom: 38px">
+                        <div class="col-4">
+                            <RadzenLabel Text="Nhập lại" />
+                        </div>
+                        <div class="col-8">
+                            <RadzenPassword  Name="NhapLaiMatKhauCu" @bind-Value=@model.NhapLaiMatKhauCu />
+                            <RadzenRequiredValidator Component="NhapLaiMatKhauCu" Text="Vui lòng nhập mật khẩu mới" Style="position: absolute"/>
+                            <RadzenCompareValidator Visible=@(!string.IsNullOrEmpty(model.NhapLaiMatKhauCu)) Value=@model.MatKhauMoi Component="NhapLaiMatKhauCu" Text="Mật khẩu phải giống nhau" Style="position: absolute" />
+                        </div>
+                    </div>                    
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Đổi mật khẩu" ></RadzenButton> 
+                </RadzenTemplateForm>
+            </RadzenFieldset>                
+    </div>
+    <div class="col" />
+</div>
+@code {
+
+    [Inject] IAuthService AuthService { get; set; }
+    private string errorMessage;
+    private bool showError = false;
+    private ChangePassVM model;
+    protected override async Task OnInitializedAsync()
+    {
+        model = new ChangePassVM(); 
+    }
+
+    public async void OnSubmit()
+    {
+        showError = false;                        ;
+        var result = AuthService.ChangePass(model);
+        int ketqua = await result;
+        if (ketqua ==1)
+        {   
+            toastService.ShowInfo("Đổi mật khẩu thành công!");
+            navigationManager.NavigateTo("/");                
+        }
+        else
+        {            
+            showError = true;
+            if (ketqua == 0)
+            {
+                errorMessage = "Lưu connect được server";
+            } else if (ketqua == 2)
+            {
+                errorMessage = "Tên đăng nhập không đúng";
+            }
+            else if (ketqua == 3)
+            {
+                errorMessage = "Mật khẩu đang dùng không đúng";
+            }
+        }
+
+    }
+    public void OnInvalidSubmit()
+    {
+        
+    }
+
+}

@@ -1,0 +1,43 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+@inject ICommonUI commonUI
+@inject IToastService toastService
+@inject DialogService dialogService
+
+<TuNgayDenNgay @bind-TuNgay=TuNgay @bind-DenNgay=DenNgay OKClick=@(async () => await LoadDanhSach())></TuNgayDenNgay>
+<br/>
+<DynGrid listChinh="listChinh" Col="colinfor" > </DynGrid>
+
+@code {
+    private DateTime TuNgay;
+    private DateTime DenNgay;
+    private IEnumerable<IDictionary<string, object>> listChinh;
+    public IDictionary<string, object> colinfor;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TuNgay = DateTime.Now;
+        DenNgay = DateTime.Now;
+        await base.OnInitializedAsync();        
+    }
+    private async Task LoadDanhSach()
+    {
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+            listChinh = await aBRClient.GetNhanVienThucHienHis(new Models.SearchModel.NhanVienThucHienSM() { TuNgay = TuNgay, DenNgay = DenNgay });
+            if (listChinh.Count() > 0)
+            {
+                colinfor = listChinh.First();
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            
+        }
+        dialogService.Close();
+    }
+}

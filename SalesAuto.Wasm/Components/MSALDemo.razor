@@ -1,0 +1,57 @@
+﻿@using SalesAuto.Models
+@using SalesAuto.Wasm.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject BlazoradeMsalService MsalService
+@inject IAuthService AuthService
+@inject NavigationManager navigationManager
+@inject IJSRuntime jsRuntime 
+
+<div class="btn-group align-content-center">    
+    <button type="button" class="btn btn-link" @onclick='async () => { await this.AcquireTokenAsync(); }'>Tài khoản Microsoft 365</button>    
+</div>
+
+@if (null != this.authResult)
+{
+    <h2>Result</h2>
+    <ul>
+        <li>Username: @this.authResult.Account?.UserName</li>
+        <li>Expires: @this.authResult.ExpiresOn</li>
+        <li>Scopes: @string.Join(", ", this.authResult.Scopes)</li>
+        <li>Scopes: @string.Join(", ", this.authResult.IdTokenClaims)</li>
+        <li><a href="https://jwt.ms/#access_token=@this.authResult.AccessToken" target="_blank">Access Token</a>: @this.authResult.AccessToken</li>
+        <li><a href="https://jwt.ms/#id_token=@this.authResult.IdToken" target="_blank">Id Token</a>: @this.authResult.IdToken</li>
+    </ul>
+}
+
+@code{
+    private AuthenticationResult authResult;
+
+    private async Task AcquireTokenAsync(params string[] scopes)
+    {
+        authResult = await this.MsalService.AcquireTokenAsync(new TokenAcquisitionRequest
+        {
+            Scopes = scopes,
+            FallbackToDefaultLoginHint = true
+        });
+        if (authResult!=null)
+        {
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.Expiry = authResult.ExpiresOn.Value.LocalDateTime;
+            loginResponse.Token = authResult.AccessToken;            
+            if (authResult.IdTokenClaims.ContainsKey("aud"))
+            {
+                loginResponse.UserId = Guid.Parse(authResult.IdTokenClaims["aud"].ToString());
+            }
+            string Roles = "";
+            if (authResult.IdTokenClaims.ContainsKey("roles"))
+            {
+                Roles = authResult.IdTokenClaims["roles"].ToString();
+            }
+
+            await AuthService.SetLoginMsal(loginResponse, authResult.Account.UserName,Roles,authResult.IdTokenClaims);            
+            await jsRuntime.InvokeAsync<object>("reloadPage");
+            navigationManager.NavigateTo("/"); 
+        }
+        this.StateHasChanged();
+    }
+}

@@ -1,0 +1,158 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Publish\**" />
+    <Content Remove="Publish\**" />
+    <EmbeddedResource Remove="Publish\**" />
+    <None Remove="Publish\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="0_202153WeeklyReports.xls" />
+    <None Remove="122021MMonthlyWeeklyReports.png" />
+    <None Remove="122021RMonthlyWeeklyReports.png" />
+    <None Remove="152022AWeeklyReports.png" />
+    <None Remove="152022CWeeklyReports.png" />
+    <None Remove="152022EWeeklyReports.png" />
+    <None Remove="152022LWeeklyReports.png" />
+    <None Remove="152022MWeeklyReports.png" />
+    <None Remove="152022NWeeklyReports.png" />
+    <None Remove="152022RWeeklyReports.png" />
+    <None Remove="152022VWeeklyReports.png" />
+    <None Remove="202151WeeklyReports.xls" />
+    <None Remove="202153WeeklyReports.xls" />
+    <None Remove="2021_12_12192021_MonthlyReports.xls" />
+    <None Remove="202217WeeklyReports.xls" />
+    <None Remove="2022_4_04242022_MonthlyReports.xls" />
+    <None Remove="2026MonthlyReports.png" />
+    <None Remove="2030MonthlyReports.png" />
+    <None Remove="2031MonthlyReports.png" />
+    <None Remove="2033MonthlyReports.png" />
+    <None Remove="502021WeeklEyeReports.jpg" />
+    <None Remove="502021WeeklEyeReports.png" />
+    <None Remove="532021EWeeklyReports.png" />
+    <None Remove="532021MWeeklyReports.png" />
+    <None Remove="532021RWeeklyReports.png" />
+    <None Remove="82021CPA_Call_Center_Report.xlsx" />
+    <None Remove="92021CPA_Call_Center_Report.xlsx" />
+    <None Remove="A202215WeeklyReports.xls" />
+    <None Remove="ABRTemplate.xlsx" />
+    <None Remove="AllReports.xls" />
+    <None Remove="aspnetcore-stdout_20210814090249_19316.log" />
+    <None Remove="aspnetcore-stdout_20210816014024_12772.log" />
+    <None Remove="BonusTongDaiTemp.xlsx" />
+    <None Remove="C202215WeeklyReports.xls" />
+    <None Remove="CPA &amp; Call Center Report.xlsx" />
+    <None Remove="CPA.xlsx" />
+    <None Remove="CPABV.xlsx" />
+    <None Remove="CPABV2.xlsx" />
+    <None Remove="CPAV1.xlsx" />
+    <None Remove="CPA_CallCenter_Report_v3.xlsx" />
+    <None Remove="CPA_Call_Center_ReportBV.xlsx" />
+    <None Remove="DailyNam.html" />
+    <None Remove="DailyNam.xls" />
+    <None Remove="DailyNam.xlsx" />
+    <None Remove="DailyNamTruoc.html" />
+    <None Remove="DailyNamTruoc.xls" />
+    <None Remove="DailyNamTruoc.xlsx" />
+    <None Remove="DailyReport.xls" />
+    <None Remove="DailyTuan.html" />
+    <None Remove="DailyTuan.xls" />
+    <None Remove="DailyTuan.xlsx" />
+    <None Remove="DailyTuantruoc.htm" />
+    <None Remove="DailyTuantruoc.html" />
+    <None Remove="DailyTuantruoc.xlsx" />
+    <None Remove="E202137WeeklyReports.xls" />
+    <None Remove="E202153WeeklyReports.xls" />
+    <None Remove="E202215WeeklyReports.xls" />
+    <None Remove="EyesHosReport.xlsx" />
+    <None Remove="EyesHosReportSummary.xlsx" />
+    <None Remove="FollowupPatients.xlsx" />
+    <None Remove="FollowupPatientsV1.xlsx" />
+    <None Remove="HinhBaoCaoTuan1.png" />
+    <None Remove="HinhBaoCaoTuan2.png" />
+    <None Remove="imgTuan-0.png" />
+    <None Remove="imgTuan-1.png" />
+    <None Remove="imgTuan-3.png" />
+    <None Remove="imgTuan-4.png" />
+    <None Remove="imgTuan-5.png" />
+    <None Remove="KPI.xlsx" />
+    <None Remove="KPI2022Temp.xlsx" />
+    <None Remove="KPIV1.xlsx" />
+    <None Remove="LeadChanelReport.xlsx" />
+    <None Remove="LeadFollow.xlsx" />
+    <None Remove="LeadFollowa.xlsx" />
+    <None Remove="LeadFollowBV - Copy.xlsx" />
+    <None Remove="LeadFollowBV.xlsx" />
+    <None Remove="LeadFollowBV2.xlsx" />
+    <None Remove="LeadFollowReport.xlsx" />
+    <None Remove="LeadsChannel.xlsx" />
+    <None Remove="LeadsChannelBV.xlsx" />
+    <None Remove="LeadsChannelV2.xlsx" />
+    <None Remove="M202112MonthlyReports.xls" />
+    <None Remove="M202137WeeklyReports.xls" />
+    <None Remove="M202153WeeklyReports.xls" />
+    <None Remove="M202215WeeklyReports.xls" />
+    <None Remove="MonthlyReport - Copy.xlsx" />
+    <None Remove="MonthlyReport.xlsx" />
+    <None Remove="MonthlyReport20210824.xlsx" />
+    <None Remove="MonthlyReport20210826.xlsx" />
+    <None Remove="N202215WeeklyReports.xls" />
+    <None Remove="R202112MonthlyReports.xls" />
+    <None Remove="R202137WeeklyReports.xls" />
+    <None Remove="R202153WeeklyReports.xls" />
+    <None Remove="R202215WeeklyReports.xls" />
+    <None Remove="REPORT_BenhNhan.xlsx" />
+    <None Remove="sample.jpg" />
+    <None Remove="Sheet2.png" />
+    <None Remove="Sheet3.png" />
+    <None Remove="Test.xlsx" />
+    <None Remove="V202215WeeklyReports.xls" />
+    <None Remove="WeeklyReports.xlsx" />
+    <None Remove="WeeklyReports20210820.xlsx" />
+    <None Remove="WeeklyReports20210824.xlsx" />
+    <None Remove="WeeklyReportsTemp.xlsx" />
+    <None Remove="WeeklyReportsV1.xlsx" />
+    <None Remove="WeeklyReportsV2.xlsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.LocalStorage" Version="4.1.2" />
+    <PackageReference Include="EPPlus" Version="5.7.3" />
+    <PackageReference Include="FreeSpire.XLS" Version="11.8.6" />
+    <PackageReference Include="Google.Apis.Drive.v3" Version="1.53.0.2397" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.13" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Web" Version="1.21.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+    <PackageReference Include="MySql.Data" Version="8.0.26" />
+    <PackageReference Include="Polly" Version="7.2.2" />
+    <PackageReference Include="Razor.Templating.Core" Version="1.6.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>    
+    <ProjectReference Include="..\DataAccessLibrary2\DataAccessLibrary.csproj" />    
+    <ProjectReference Include="..\DB\DB.csproj" />    
+    <ProjectReference Include="..\HelperLib\HelperLib.csproj" />    
+    <ProjectReference Include="..\LeadLib\LeadLib.csproj" />    
+    <ProjectReference Include="..\SalesAuto.Models\SalesAuto.Models.csproj" />
+  </ItemGroup>
+
+</Project>

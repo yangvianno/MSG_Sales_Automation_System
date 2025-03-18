@@ -1,0 +1,108 @@
+﻿@using SalesAuto.Models.ViewModel
+@using Radzen.Blazor
+@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Wasm.Components
+
+@inject IABRClient aBRClient
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject ICommonUI commonUI
+@inject IExportFile exportFile
+@inject IJSRuntime jsRuntime
+<div class="card" style="width: 60rem; height:min-content">
+    @if (listChiTiet!=null)
+    {
+        <RadzenButton Text="Excel" Icon="grid_on" Click="Export" Style="margin-bottom:20px" />
+
+        <RadzenDataGrid AllowFiltering="false" 
+            AllowPaging="true" PageSize="40"
+            AllowColumnResize="true"                        
+            Data="@listChiTiet" 
+            TItem="ABRChiTietNhanVienVM"
+            Render="@OnRenderChiTiet"
+            >
+            <GroupHeaderTemplate>
+                    <strong> 
+                        @context.GroupDescriptor.GetTitle(): @context.Data.Key
+                    </strong>
+            </GroupHeaderTemplate>
+            <Columns>
+                <RadzenDataGridColumn Width="70px" TItem="ABRChiTietNhanVienVM" Property="MaNhanVien" Title="STT" TextAlign="TextAlign.Center">
+                 <Template Context="data">
+                    @(listChiTiet.IndexOf(data) + 1 +"/" +listChiTiet.Count)
+                </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ABRChiTietNhanVienVM" Property="Ten" Title="Tên">
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Width="120px" TItem="ABRChiTietNhanVienVM" Property="ABRTrucTiep" Title="Giá" TextAlign="TextAlign.Right">  
+                    <Template Context="row">
+                        @row.ABRTrucTiep.ToString("##,#")
+                    </Template>
+                </RadzenDataGridColumn>            
+                <RadzenDataGridColumn Width="70px" TItem="ABRChiTietNhanVienVM" Property="SoLuong" Title="SL" TextAlign="TextAlign.Center" >                
+                </RadzenDataGridColumn>            
+                <RadzenDataGridColumn Width="70px" TItem="ABRChiTietNhanVienVM" Property="MucHuong" Title="Mức hưởng" TextAlign="TextAlign.Center" >  
+                    <Template Context="row">
+                        @row.MucHuong.ToString("##,#")%
+                    </Template>
+                </RadzenDataGridColumn>            
+                <RadzenDataGridColumn Width="120px" TItem="ABRChiTietNhanVienVM" Property="ThanhTien" Title="Thành tiền" TextAlign="TextAlign.Right">   
+                    <Template Context="row">
+                        @row.ThanhTien.ToString("##,#")
+                    </Template>
+                    <GroupFooterTemplate>
+                        @String.Format(new System.Globalization.CultureInfo("en-US"), "{0:#,#}", context.Data.Items.Cast<ABRChiTietNhanVienVM>().Sum(o => o.ThanhTien))
+                    </GroupFooterTemplate>
+                    <FooterTemplate>
+                        <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listChiTiet.Sum(o => o.ThanhTien))</b>
+                    </FooterTemplate>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+    else
+    {
+        <span>
+            Loading...
+        </span>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public string MaNhanVien { get; set; }
+    [Parameter]
+    public int Thang { get; set; }
+    [Parameter]
+    public int Nam { get; set; }
+
+    private List<ABRChiTietNhanVienVM> listChiTiet;
+    protected override async void OnParametersSet()
+    {
+        await LoadDanhSachChiTiet();
+    }
+    private async Task LoadDanhSachChiTiet()
+    {               
+        listChiTiet = await aBRClient.GetABRChiTietNhanVien(MaNhanVien,Thang,Nam);
+        StateHasChanged();
+    }
+    public void OnRenderChiTiet(DataGridRenderEventArgs<ABRChiTietNhanVienVM> args)
+    {
+        if(args.FirstRender)
+        {
+            args.Grid.Groups.Add(new GroupDescriptor(){ Property = "Nhom", Title = "Loại" });
+            StateHasChanged();
+        }
+    }
+    private async Task Export()
+    {
+        var pkg = await exportFile.SaveFile(listChiTiet);
+        var fileBytes = pkg.GetAsByteArray();
+        pkg.Dispose();
+        var fileName = $"BaoCao.xlsx";
+        await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+    }
+
+}

@@ -1,0 +1,75 @@
+﻿@using Microsoft.AspNetCore.WebUtilities
+@inject HttpClient httpClient
+@inject IToastService toastService
+@inject IJSRuntime jsRuntime
+
+<h3>Download file Bonus</h3>
+<div class="container-fluid">    
+    <div class="row">
+        <div class="col">
+           <RadzenLabel Text="Tháng" Component="NumThang" />
+           <RadzenNumeric @bind-Value="Thang" TValue="int" Min="1" Max="12" Name="NumThang" ></RadzenNumeric>
+        </div>
+       <div class="col">
+           <RadzenLabel Text="Năm" Component="NumNam" />
+           <RadzenNumeric @bind-Value="Nam" TValue="int" Name="NumNam" ></RadzenNumeric>
+       </div>
+       <div class="col">
+           <RadzenButton Text="Lấy file" Click="@(async () => await LoadFile())" />
+       </div>
+       <div class="col">
+           <RadzenButton Text="Lấy file chi tiết" Click="@(async () => await LoadFileChiTiet())" />
+       </div>
+   </div>
+</div>
+
+@code {
+    private int Thang;
+    private int Nam;
+    protected override async Task OnInitializedAsync()
+    {
+        Nam = DateTime.Now.AddMonths(-1).Year;
+        Thang = DateTime.Now.AddMonths(-1).Month;
+    }
+    public async Task LoadFile()
+    {
+        var queryStringParam = new Dictionary<string, string>
+        {
+            ["thang"] = Thang.ToString(),
+            ["nam"] = Nam.ToString()
+        };
+
+        string url = QueryHelpers.AddQueryString("api/BonusTongDai/GetBonusExcel", queryStringParam);
+        var fileName = $"BonusFile{Thang}-{Nam}.xlsx";
+        await DownloadFile(url, fileName);
+    }
+    public async Task LoadFileChiTiet()
+    {
+        var queryStringParam = new Dictionary<string, string>
+        {
+            ["thang"] = Thang.ToString(),
+            ["nam"] = Nam.ToString()
+        };
+
+        string url = QueryHelpers.AddQueryString("api/BonusTongDai/GetBonusExcelChiTiet", queryStringParam);
+        var fileName = $"BonusFileChiTiet{Thang}-{Nam}.xlsx";
+        await DownloadFile(url, fileName);
+    }
+    private async Task DownloadFile(string url, string fileName)
+    {
+        toastService.ShowInfo("Đang load file ...");
+        var response = await httpClient.PostAsJsonAsync(url, Nam);
+        response.EnsureSuccessStatusCode();
+        if (response.IsSuccessStatusCode)
+        {
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+            await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+            toastService.ShowSuccess("Lưu file hoàn tất!");
+        }
+        else
+        {
+            toastService.ShowSuccess("Lỗi!" + response.RequestMessage.ToString());
+        }    
+    }
+
+}

@@ -1,0 +1,107 @@
+﻿@page "/OPXuatFileDataRawP"
+
+@using Radzen.Blazor
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Models.ViewModel
+@using SalesAuto.Wasm.Components
+
+@inject IReportExcelClient reportExcelClient 
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject ICommonUI commonUI
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col"></div>
+        <div class="col-10">
+            <table align:center>               
+                <tr>
+                    <td>
+                        <RadzenLabel Text="Loại danh sách" Style="margin-left: 5px" Component="LoaiBaoCaoRD" />
+                        <RadzenDropDown @bind-Value="LoaiBaoCaoDuocChon" Data="@LoaiBaoCao" TextProperty="Value" ValueProperty="Key" Name="LoaiBaoCaoRD" />
+                    </td>
+                    <td>
+                        <TuNgayDenNgay @bind-TuNgay="TuNgay" @bind-DenNgay="DenNgay" OKClick="LoadDanhSach" />
+                    </td>
+                </tr>          
+            </table>
+        </div>
+        <div class="col"></div>
+    </div>
+    <div class="row justify-content-center">       
+        <div class="col-12">
+           @if (colinfor != null && listChinh != null)
+            {
+                <DynGrid listChinh="listChinh" Col="colinfor" />  
+            }
+            else
+            {
+                <span> Không có dữ liệu </span>
+            }
+        </div>     
+    </div>
+</div>
+    
+@code {
+    private DateTime TuNgay;
+    private DateTime DenNgay;
+    private IEnumerable<IDictionary<string, object>> listChinh;
+    public IDictionary<string, object> colinfor;
+    private Dictionary<int, string> LoaiBaoCao = new Dictionary<int, string>();
+    private int LoaiBaoCaoDuocChon = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TuNgay = DateTime.Now;
+        DenNgay = DateTime.Now;
+        LoaiBaoCao.Add(1, "Danh sách leads");
+        LoaiBaoCao.Add(2, "Danh sách Book");
+        LoaiBaoCao.Add(3, "Danh sách Khám");
+        LoaiBaoCao.Add(4, "Danh sách Phẫu thuật");
+        LoaiBaoCao.Add(5, "Quá Trình Khám");
+        LoaiBaoCao.Add(6, "Quá Trình Phẫu thuật");
+    }
+    public async Task LoadDanhSach()
+    {
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+            if (LoaiBaoCaoDuocChon == 1)
+            {
+                listChinh = await reportExcelClient.GetDanhSachLead(TuNgay, DenNgay);
+            } else if (LoaiBaoCaoDuocChon == 2)
+            {
+                listChinh = await reportExcelClient.GetDanhSachBook(TuNgay, DenNgay);
+            }
+            else if (LoaiBaoCaoDuocChon == 3)
+            {
+                listChinh = await reportExcelClient.GetDanhSachKham(TuNgay, DenNgay);
+            }
+            else if (LoaiBaoCaoDuocChon == 4)
+            {
+                listChinh = await reportExcelClient.GetDanhSachPhauThuat(TuNgay, DenNgay);
+            }
+            else if (LoaiBaoCaoDuocChon == 5)
+            {
+                listChinh = await reportExcelClient.GetQuaTrinhKham(TuNgay, DenNgay);
+            }
+            else 
+            {
+                listChinh = await reportExcelClient.GetQuaTrinhPhauThuat(TuNgay, DenNgay);
+            }
+
+            if (listChinh.Count() > 0)
+            {
+                colinfor = listChinh.First();
+            }
+           
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+        await InvokeAsync(StateHasChanged);
+    }
+}

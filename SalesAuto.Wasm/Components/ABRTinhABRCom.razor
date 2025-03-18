@@ -1,0 +1,142 @@
+﻿@using Radzen.Blazor
+@using SalesAuto.Models
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Components
+@inject IABRClient aBRClient
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject IABRLoadFileDanhGiaNhanVien aBRLoadFileDanhGiaNhanVien
+@inject ICommonUI commonUI
+
+<ABRQuaTrinhTinhABR Nam=@Nam Thang=@Thang DaUploadBangDanhGia=@DaTinhABR DaTinhABR=@DaTinhABR></ABRQuaTrinhTinhABR>
+<div class="container">
+    <div class="row">
+        <div class="col-9">
+            <table>
+                <tr>
+                    <td>
+                        <RadzenLabel Style="width:70px; text-align: right;"  Text="Tháng"/>
+                        
+                    </td>
+                    <td>
+                        <RadzenNumeric @bind-Value="Thang" TValue="int" Max="12" Min="1" Change="@(async ()=>await LoadTinhTrang())"></RadzenNumeric>
+                    </td>
+                    <td>
+                        <RadzenLabel Style="width:70px; text-align: right;"  Text="Năm"/>
+                    </td>
+                    <td>
+                        <RadzenNumeric @bind-Value="Nam" TValue="int" Change="@(async ()=>await LoadTinhTrang())"></RadzenNumeric>
+                    </td>
+                    <td>
+                        <RadzenLabel Style="width:100px; text-align: right;"  Text="Từ ngày">                            
+                        </RadzenLabel>
+                    </td>                    
+                    <td>
+                        <RadzenDatePicker Style="width:150px" @bind-Value=@TuNgay DateFormat="d" ReadOnly="@(DaXetDuyet)"/>
+                    </td>                    
+
+                    <td>
+                        <RadzenLabel Style="width:100px; text-align: right;" Text="Đến ngày">                            
+                        </RadzenLabel>
+                    </td>                    
+                    <td>
+                        <RadzenDatePicker Style="width:150px" @bind-Value=@DenNgay DateFormat="d" ReadOnly="@(DaXetDuyet)"/>
+                    </td> 
+                </tr>
+            </table>
+        </div>
+        <AuthorizeView Roles="abrTinhABR">
+            <div class="col">
+                <RadzenButton Icon="delete" Size="ButtonSize.Small" Text="Tính ABR" ButtonStyle="ButtonStyle.Danger" Visible=@(DaUpFileDanhGia && !DaXetDuyet) Click="@(async ()=>await TinhABR())"></RadzenButton>
+            </div>
+        </AuthorizeView>
+    </div>
+</div>
+<RadzenTabs RenderMode="TabRenderMode.Client">
+    <Tabs>
+        <RadzenTabsItem Text="Bảng đánh giá">
+            <ARRBangDanhGiaCom Thang="@Thang" Nam="@Nam"></ARRBangDanhGiaCom>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Bảng lương ABR">
+            <ABRBangChiTietCom @ref="aBRBangChiTietCom" Thang="@Thang" Nam="@Nam" DaTinhABR="@DaTinhABR" DaXetDuyet="@DaXetDuyet"></ABRBangChiTietCom>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+
+    private int Nam;
+    private int Thang;
+    public bool DaUpFileDanhGia;
+    public bool DaXetDuyet;
+    public bool DaTinhABR;
+    private DateTime TuNgay;
+    private DateTime DenNgay;
+    ABRBangChiTietCom aBRBangChiTietCom;
+    protected override async Task OnInitializedAsync()
+    {
+        var Ngay = DateTime.Now.AddMonths(-1);
+        Thang = Ngay.Month;
+        Nam = Ngay.Year;
+        await LoadTinhTrang();
+    }
+    public async Task LoadTinhTrang()
+    {
+        DaTinhABR = await aBRClient.CheckDaTinhABR(Thang, Nam);
+        DaUpFileDanhGia = await aBRClient.CheckDaUploadBangDanhGia(Thang, Nam);
+        DaXetDuyet = await aBRClient.CheckDaXetDuyet(Thang, Nam,1, "");
+        await LayNgayThang(Thang, Nam);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task LayNgayThang(int Thang, int Nam)
+    {
+        var NgayThang = await aBRClient.GetNgayTheoThang(Thang, Nam);
+        if (NgayThang!=null)
+        {
+            TuNgay = NgayThang.TuNgay;
+            DenNgay = NgayThang.DenNgay;
+        }
+    }
+
+    public async Task TinhABR()
+    {
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự muốn tính ABR?", "Lưu ý", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            commonUI.BusyDialog(dialogService, "Loading...");
+
+            ABRThangNam item = new ABRThangNam()
+            {
+                Thang = this.Thang, Nam = this.Nam, TuNgay = this.TuNgay, DenNgay = this.DenNgay
+            };
+            try
+            {
+                await aBRClient.SaveNgayTheoThang(item);
+            }
+            catch
+            {                
+            }
+
+            try
+            {
+                var result = await aBRClient.TinhHuongABR(Thang, Nam);
+                if (result)
+                {
+                    await LoadTinhTrang();
+                    await aBRBangChiTietCom.LoadDanhSachChiTiet();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            dialogService.Close();
+            toastService.ShowInfo("Tính thành công!");
+        }
+
+    }
+
+}

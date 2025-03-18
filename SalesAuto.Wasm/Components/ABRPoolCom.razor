@@ -1,0 +1,156 @@
+﻿<h3>Pools hưởng riêng</h3>
+@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+@inject ICommonUI commonUI
+@inject IToastService toastService
+@inject DialogService dialogService
+
+
+<div >
+    <RadzenButton Icon="add_circle_outline" style="margin-bottom: 10px" Text="Add" Click="@InsertRow" />
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true" EditMode="DataGridEditMode.Single"                 
+                    AllowColumnResize="true" 
+                    FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Data="@listChinh" TItem="AbrPool" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+        <Columns>   
+            <RadzenDataGridColumn TItem="AbrPool" Property="TenPool" Title="Tên">   
+                  <EditTemplate Context="item">
+                    <RadzenTextBox @bind-Value="item.TenPool" Style="width:100%; display: block" Name="TenPool" />
+                    <RadzenRequiredValidator Text="Vui lòng điền code" Component="TenPool" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="AbrPool" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+                <Template Context="item">
+                    <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="item">
+                    <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                    </RadzenButton>
+                    <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AbrPool" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+                <Template Context="item">
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="item">
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+    
+</div>
+@code {
+
+    RadzenDataGrid<AbrPool> danhMucGrid;
+    List<AbrPool> listChinh;
+
+    private bool ThemMoi;
+    AbrPool OldRow = new AbrPool();
+    protected override async Task OnInitializedAsync()
+    {
+        await loadDanhSach();
+        await base.OnInitializedAsync();        
+    }
+
+    async Task loadDanhSach()
+    {
+        listChinh = await aBRClient.GetDanhSachPool();
+    }
+
+    void InsertRow()
+    {
+        toastService.ShowInfo("Thêm danh muc mói");
+        danhMucGrid.InsertRow(new AbrPool());
+        ThemMoi = true;
+    }
+    async Task OnUpdateRow(AbrPool item)
+    {
+    }
+
+    void OnCreateRow(AbrPool item)
+    {
+    }
+    void EditRow(AbrPool item)
+    {
+        danhMucGrid.EditRow(item);
+        ThemMoi = false;
+        GanGiaTri(OldRow, item);
+    }
+
+    void GanGiaTri(AbrPool OldRow, AbrPool aBRDanhMuc)
+    {
+        OldRow.TenPool = aBRDanhMuc.TenPool;
+    }
+
+    async Task SaveRow(AbrPool item)
+    {   
+        var result = await aBRClient.SavePool(item);
+        item.ID = result.ID;
+        if (ThemMoi)
+        {
+            if (result!=null)
+            {               
+                toastService.ShowSuccess("Lưu thành công");               
+                ThemMoi = false;
+                await danhMucGrid.UpdateRow(item);
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+            }
+        }
+        else
+        {
+            if (result!=null)
+            {
+                toastService.ShowSuccess("Lưu thành công");
+                ThemMoi = false;
+                await danhMucGrid.UpdateRow(item);
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+            }
+
+        }
+    }
+
+    void CancelEdit(AbrPool item)
+    {
+        danhMucGrid.CancelEditRow(item);
+        if (!ThemMoi)
+        {
+            GanGiaTri(item, OldRow);
+        }
+    }
+
+    async Task DeleteRow(AbrPool item)
+    {
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự muốn xóa?", "Xóa", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No"});
+        if (Result)
+        {
+            bool ketqua = await aBRClient.DeletePool(item.ID);
+            if (ketqua)
+            {
+                toastService.ShowSuccess("Xóa thành công");
+                listChinh.Remove(item);
+                await danhMucGrid.Reload();
+            }
+            else
+            {
+                toastService.ShowError("Xóa bị lỗi!");
+            }
+        }
+
+    }
+
+}

@@ -1,0 +1,33 @@
+﻿@inherits LayoutComponentBase
+@using Blazored.Toast.Configuration
+@using Microsoft.AspNetCore.Components.Authorization
+@using SalesAuto.Wasm.Components
+
+
+
+<RadzenNotification />
+<RadzenDialog />
+
+<div class="page">
+    <AuthorizeView>
+        <Authorized>            
+            <div class="sidebar bg-success scrollarea">
+                <NavMenu />
+            </div>            
+        </Authorized>
+    </AuthorizeView>    
+    <div class="main">
+        <div class="top-row px-4">
+           <DisplayLogin></DisplayLogin>
+        </div>
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+</div>
+<BlazoredToasts Position="ToastPosition.TopRight"
+                Timeout="10"
+                IconType="IconType.Material"                
+                MaxToastCount="2"/>
+
+

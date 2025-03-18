@@ -1,0 +1,70 @@
+﻿
+<div class="row">
+    <div class="col">
+        <table>
+            <tr>
+                <td>
+                    <span class="text-center"> <label for="LoaiChiTieu" class="text-start">Loại</label> </span>
+                </td>
+                <td>
+                    @if(listLoaiChiTieu!=null)
+                    {
+                        <RadzenDropDown id="LoaiChiTieu" TValue="int" Style="width:300px"
+                                    Data=@(listLoaiChiTieu) TextProperty="MoTa" ValueProperty="MaLoaiChiTieu" @bind-Value=@m_MaLoaiChiTieu
+                                    Change=@(args => OnChange(args, "DropDown")) />
+                    }
+                </td>
+                <td>
+                    <label for="nam">Năm</label>
+                    <input id="nam" type="number" @bind-value="nam" />
+                    <button class="btn btn-success" @onclick="@(async()=> await loadList())"> load </button>
+                    <button class="btn btn-success" @onclick="@(async()=> await SaveList())"> Save </button>
+                </td>
+            </tr>
+        </table>
+    </div>    
+</div>
+<div class="row">
+    <div class="col">
+        @if(listChiTieu == null)
+        {
+            @if(isLoading)
+            {
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">...</span>
+                </div>
+            }
+            else
+            {
+                <div> Không có thông tin </div>
+            }
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            Tháng
+                        </th>
+                        <th>
+                            Số lượng
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in listChiTieu)
+                    {
+                        <tr>
+                            <td>@item.Thang</td>
+                            <td>
+                                <input type="number" @bind-value="item.SoLuong" />
+                            </td>                                                        
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+</div>

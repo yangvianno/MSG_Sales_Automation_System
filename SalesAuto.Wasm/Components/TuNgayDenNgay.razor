@@ -1,0 +1,30 @@
+﻿Từ ngày <RadzenDatePicker Style="width:150px" @bind-Value=@TuNgay DateFormat="d" Change=@OnTuNgayChange/>
+ đến ngày <RadzenDatePicker Style="width:150px" @bind-Value=@DenNgay DateFormat="d" Change=@OnDenNgayChange/>
+<RadzenButton Text="Reload" Click="OnOK"></RadzenButton>
+
+@code {
+    [Parameter]
+    public DateTime TuNgay { get; set; }
+    [Parameter]
+    public DateTime DenNgay { get; set; }
+    [Parameter]
+    public EventCallback<DateTime> TuNgayChanged { get; set; }
+    [Parameter]
+    public EventCallback<DateTime> DenNgayChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OKClick { get; set; }
+
+    private async Task OnTuNgayChange()
+    {
+        await TuNgayChanged.InvokeAsync(TuNgay);
+    }
+    private async Task OnDenNgayChange()
+    {
+        await DenNgayChanged.InvokeAsync(DenNgay);
+    }
+    private async Task OnOK()
+    {
+        await OKClick.InvokeAsync();
+    }
+}

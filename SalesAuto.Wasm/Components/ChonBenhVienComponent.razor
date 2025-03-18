@@ -1,0 +1,16 @@
+﻿@if (DanhSachBenhVien != null)
+{
+<table>
+    <tr>
+        <td>
+            Chọn chi nhánh làm việc:
+        </td>
+        <td>
+            <RadzenDropDown AllowClear="true" TValue="string" Style="width:300px"
+                            Data=@(DanhSachBenhVien) TextProperty="TenBenhVien" ValueProperty="MaBenhVien" @bind-Value=@BenhVienDangLamViec
+                            Change=@(args => OnChange(args, "DropDown")) />
+        </td>
+    </tr>
+</table>
+}
+

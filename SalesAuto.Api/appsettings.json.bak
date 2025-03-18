@@ -1,0 +1,21 @@
+{
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Data source=10.120.2.40; Initial Catalog=FIN_REPORT; User Id=thanhIT;Password=P@ssw0rd!23; MultipleActiveResultSets=True",
+    "MySqlConnection": "Server=14.238.94.154;Database=tcrm_bvmat;User Id=bvmat_read;Password=Bvmat#ReadDB154;Port=3306;SslMode=none"
+  },
+  "JwtIssuer": "thanh",
+  "JwtAudience": "0908325345",
+  "JwtSecurityKey": "thanh0908325345thagfohsaghsdpagnjputughkdbvgsdpigfujdsgfgnfgg",
+  "JwtExpiryInDays": "1",
+
+  "MailSettings": {
+    "Mail": "support@matsaigon.com",
+    "DisplayName": "MSG Auto Reporting",
+    "Password": "Msg@9876",
+    "Host": "smtp.office365.com",
+    "Port": 587,
+    "SendTo": "thanh.tran@matsaigon.com",
+    "CCTo": ""
+  }
+}

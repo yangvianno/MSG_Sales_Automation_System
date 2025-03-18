@@ -1,0 +1,117 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Models.ViewModel;
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+<div class="container-fluid">   
+    @if (listNoiLamViec == null || ListUserNoiThucHien == null || ListUserNoiChiDinh == null)
+    {
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="height:30px"/>
+    }
+    else
+    {
+        <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true"
+                        EditMode="DataGridEditMode.Single"
+                        AllowColumnResize="true"
+                        FilterMode="FilterMode.Simple"
+                        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        Data="@Users" TItem="UserVM"
+                        ColumnWidth="100px">
+            <Columns>
+                <RadzenDataGridColumn Width="50px" TItem="UserVM" Property="UserName" Title="UserNam" Visible="true">               
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="UserVM" Property="UserName" Title="Nơi thực hiện" Visible="true">
+                    <Template Context="item">
+                        <RadzenButton Icon="add" Size="ButtonSize.Small" Click="@(async (args) => await ChonNoiThucHien(item))"></RadzenButton>
+                        <br/>
+                        @foreach (var a in ListUserNoiThucHien.FindAll(x => x.IDUser == item.Id))
+                        {   
+                            var found = listNoiLamViec.Find(x => x.MaNoiLamViec == a.MaNoiLamViec);
+                            if (found != null)
+                            {
+                                <span>@(found.TenNoiLamViec)</span> <br/>
+                            }
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="UserVM" Property="UserName" Title="Nơi chỉ định" Visible="true">
+                    <Template Context="item">
+                        <RadzenButton Icon="add" Size="ButtonSize.Small" Click="@(async (args) => await ChonNoiChiDinh(item))"></RadzenButton>
+                        <br/>
+                        @foreach (var a in ListUserNoiChiDinh.FindAll(x => x.IDUser == item.Id))
+                        {
+                            var found = listNoiLamViec.Find(x => x.MaNoiLamViec == a.MaNoiLamViec);
+                            if (found != null)
+                            {
+                                <span>@(found.TenNoiLamViec)</span> <br />
+                            }
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>   
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    public List<UserVM> Users;
+
+    RadzenDataGrid<UserVM> danhMucGrid;
+    List<ABRNoiLamViecVM> listNoiLamViec;
+    List<ABRUserXacNhanNoiLamViec> ListUserNoiThucHien;
+    List<ABRUserXacNhanNoiLamViec> ListUserNoiChiDinh;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUser();
+        await LoadNoiLamViec();
+        await GetUserXacNhanNoiLamViecChiDinh();
+        await GetUserXacNhanNoiLamViecThucHien();
+    }
+    public async Task LoadUser()
+    {
+        Users = await aBRClient.LayUserKetThucHis();
+    }
+
+    public async Task LoadNoiLamViec()
+    {
+        listNoiLamViec = await aBRClient.GetNoiLamViec();
+    }
+
+    public async Task GetUserXacNhanNoiLamViecChiDinh()
+    {
+        ListUserNoiChiDinh = await aBRClient.GetUserXacNhanNoiLamViecChiDinh();
+    }
+    public async Task GetUserXacNhanNoiLamViecThucHien()
+    {
+        ListUserNoiThucHien = await aBRClient.GetUserXacNhanNoiLamViecThucHien();
+    }
+    async Task ChonNoiThucHien(UserVM item)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("User", item);
+        parameters.Add("listNoiLamViec", listNoiLamViec);
+        parameters.Add("values", ListUserNoiThucHien.FindAll(x=>x.IDUser == item.Id));
+        parameters.Add("NoiThucHien", true);
+        var result = Modal.Show<ABRUserNoiLamViecCom>("Chọn nơi làm việc " + item.UserName , parameters);
+        await result.Result;
+        await GetUserXacNhanNoiLamViecThucHien();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task ChonNoiChiDinh(UserVM item)
+    {
+        var parameters = new ModalParameters();
+        parameters.Add("User", item);
+        parameters.Add("listNoiLamViec", listNoiLamViec);
+        parameters.Add("values", ListUserNoiChiDinh.FindAll(x => x.IDUser == item.Id));
+        parameters.Add("NoiThucHien", false);
+        var result = Modal.Show<ABRUserNoiLamViecCom>("Chọn nơi chỉ định " + item.UserName, parameters);
+        await result.Result;
+        await GetUserXacNhanNoiLamViecChiDinh();
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

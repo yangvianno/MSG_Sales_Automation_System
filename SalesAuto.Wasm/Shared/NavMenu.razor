@@ -1,0 +1,114 @@
+﻿<div class="top-row pl-4 navbar bg-light ">    
+    <RadzenImage Path="Logo.png" Style="height:40px" />    
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+        <RadzenPanelMenu title="ABR">
+            <AuthorizeView Roles="Sale">
+                <RadzenPanelMenuItem Text="Bệnh nhân" Path="benhnhansList"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Leads" Path="leadsList"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Download report" Path="reportdownload"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Upload leads" Path="fileUpload"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Up chỉ tiêu" Path="upchitieulasik"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Điền thông tin">
+                        <RadzenPanelMenuItem Text="Leads remove" Path="leadremoved"></RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Text="KPI" Path="kpiMonthly"></RadzenPanelMenuItem>                    
+                        <RadzenPanelMenuItem Text="Thông tin khác" Path="chiTieu"></RadzenPanelMenuItem>
+                    </RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Xuất Raw data" Path="OPXuatFileDataRawP"></RadzenPanelMenuItem>
+            </AuthorizeView>              
+            <AuthorizeView Roles="abrPhanQuyenKetThucHIS">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Phân quyền xác nhận His" Path="ABRPhanQuyenUserKetThucCongViecP"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Phân quyền nơi làm việc" Path="ABRPhanQuyenUserNoiLamViecP"></RadzenPanelMenuItem>
+                
+            </AuthorizeView>
+            <AuthorizeView Roles="abrXacNhanHIS, abrSoLuong">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Xác nhận thông tin His">
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Xác nhận" Path="ABRXacNhanNhanVienHisP"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Báo cáo" Path="ABRBaoCaoXacNhanNhanVienHisP"></RadzenPanelMenuItem>
+                </RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrTinhABR, abrXetDuyet1, abrXetDuyet2, abrSoLuong">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Xác nhận thông tin ABR" Path="ABRChuaXacDinhThucHienP"></RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrTinhABR, abrXetDuyet1, abrXetDuyet2, abrSoLuong">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Báo cáo">
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Bảng tổng kết" Path="ABRBangTongKetP"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Bảng chi tiết" Path="ABRBangChiTietP"></RadzenPanelMenuItem>                                           
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Chi tiết lương dịch vụ " Path="ABRChiTietLuongDichVuP"></RadzenPanelMenuItem>                                        
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Nhân viên thực hiện His " Path="ABRNhanVienThucHienHisP"></RadzenPanelMenuItem> 
+                </RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrUploadDanhGia, abrXetDuyet1, abrXetDuyet2">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Đối tượng hưởng ABR" Path="ABRUploadBangDanhGiaP"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Nhập ngày công" Path="ABRUploadNgayCongP"></RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrTinhABR, abrXetDuyet1, abrXetDuyet2">
+            <RadzenPanelMenuItem Style="background-color:#04464C" Text="Tính ABR" Path="ABRTinhABRP"></RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrXetDuyet1 , abrXetDuyet2">
+            <RadzenPanelMenuItem Style="background-color:#04464C" Text="Xét duyệt" Path=""></RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrTinhABR, abrUploadDanhGia, abrXetDuyet1, abrXetDuyet2">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Xuất file" Path="ABRXuatFileP"></RadzenPanelMenuItem>                
+            </AuthorizeView>
+            <AuthorizeView Roles="abrXetDuyet2, ABRMasterData">
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Master data" Path="ABRXuatFileP">                    
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Danh mục ABR" Path="ABRDanhMucMasterDataP"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Xét duyệt chính sách" Path="ABRXetDuyetChinhSachP"></RadzenPanelMenuItem>
+                </RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="abrTinhABR, abrSoLuong, ABRMasterData">
+            <RadzenPanelMenuItem Style="background-color:#04464C" Text="Danh mục">
+                <RadzenPanelMenuItem Text="Dịch vụ">
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Danh mục ABR" Path="ABRDanhMucPV2"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Map danh mục ABR-HIS" Path="ABRMapCongViecABRHISP"></RadzenPanelMenuItem>
+                </RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Style="background-color:#04464C" Text="Nhân viên">
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Danh mục nhân viên" Path="ABRDanhMucNhanVienP"></RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Style="background-color:#04464C" Text="Map Nhân viên ABR-HIS" Path="ABRMapNhanVienABRHisP"></RadzenPanelMenuItem>
+                </RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Pools riêng" Path="ABRPoolsP"></RadzenPanelMenuItem>
+            </RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="BonusCallcenter">
+            <RadzenPanelMenuItem Text="Bonus call center">                
+                <RadzenPanelMenuItem Text="Nhập target" Path="chiTieu"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Kết quả tình bonus" Path="BonusDownloadP"></RadzenPanelMenuItem>                
+            </RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="HisHenKham">
+            <RadzenPanelMenuItem Text="His-Hẹn khám">                
+                <RadzenPanelMenuItem Text="Hẹn khám theo toa" Path="HisHenKhamTheoToaP"></RadzenPanelMenuItem>
+                <RadzenPanelMenuItem Text="Xác nhận đến khám" Path="HisHenKhamXacNhanDenKhamP"></RadzenPanelMenuItem>
+                @*<RadzenPanelMenuItem Text="Danh sách bệnh chưa khám" Path="HisHenKhamBenhChuaKhamP"></RadzenPanelMenuItem> *@
+            </RadzenPanelMenuItem>
+            </AuthorizeView>
+            <AuthorizeView Roles="HisBangGia">
+            <RadzenPanelMenuItem Text="His-Bảng giá">                
+                <RadzenPanelMenuItem Text="Theo đối tượng" Path="HisBangGiaTheoDoiTuongP"></RadzenPanelMenuItem>                
+            </RadzenPanelMenuItem>
+            </AuthorizeView>
+        </RadzenPanelMenu>        
+    </ul>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool expandSubNav = false;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

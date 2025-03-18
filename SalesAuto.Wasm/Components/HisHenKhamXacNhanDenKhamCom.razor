@@ -1,0 +1,486 @@
+﻿@using SalesAuto.Models.ViewModel.HenKham
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Models.Entities.HenKham
+@using SalesAuto.Models.Entities.CRM
+
+@inject IHenKhamClient henKhamClient
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject ICommonUI commonUI
+@inject IExportFile exportFile
+@inject IJSRuntime jsRuntime
+
+
+<div>    
+    <TuNgayDenNgay @bind-TuNgay="TuNgay" @bind-DenNgay="DenNgay" OKClick="LoadDanhSach" />
+</div>
+@if (listChinh!=null)
+{
+    <RadzenButton Text="Danh sách mẫu" Icon="grid_on" Click="DanhSachMau" Style="margin-bottom:20px" />
+    <RadzenButton Text="Excel" Icon="grid_on" Click="Export" Style="margin-bottom:20px" />
+    <RadzenButton Text="Lấy theo mẫu" Icon="open_in_browser" IconStyle="Danger" Click="@(async () => await LayTheoMau())" ButtonStyle="ButtonStyle.Primary"/>
+    <RadzenButton Text="Chuyển lên CRM" Icon="open_in_browser" IconStyle="Danger" Click="@(async () => await UpToCRMToanBo())" ButtonStyle="ButtonStyle.Primary"/>
+    <RadzenLabel Text="Tự lưu mẫu" Component="ckbTuLuuMau" Style="margin-left: 8px; vertical-align: middle;" />
+    <RadzenCheckBox @bind-Value=@checkTuLuuMau  Name="ckbTuLuuMau" TValue="bool"/>
+
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="40" AllowSorting="true"
+        EditMode="DataGridEditMode.Single"
+        AllowColumnResize="true"
+        FilterMode="FilterMode.Simple"
+        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+        Data="@listChinh" TItem="HKLayDanhSachCapNhatTinhTrang">
+        <Columns>
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="HoTenBN" Title="Họ tên">   
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.HoTenBN) </p>
+                 </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="DiaChi" Title="Địa chỉ">  
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.DiaChi) </p>
+                 </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="100px" TItem="HKLayDanhSachCapNhatTinhTrang" Property="DienThoai" Title="ĐT"> 
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="100px" TItem="HKLayDanhSachCapNhatTinhTrang" Property="NgayHenKham" Title="Ngày hẹn-CRM"> 
+                <Template Context="row">
+                    @row.NgayHenKham?.ToString("yyyy-MM-dd")
+                </Template>              
+            </RadzenDataGridColumn> 
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="Kham" Title="Khám"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.Kham) </p>
+                 </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="100px" TItem="HKLayDanhSachCapNhatTinhTrang" Property="NgayKham" Title="Ngày khám-HIS"> 
+                <Template Context="row">                   
+                    @row.NgayKham?.ToString("yyyy-MM-dd")                   
+                </Template>
+            </RadzenDataGridColumn>  
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="BsKham" Title="BS khám"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.BsKham) </p>
+                 </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="ChanDoan" Title="Chẩn đoán"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.ChanDoan) </p>
+                 </Template>
+            </RadzenDataGridColumn>            
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="LyDoHen" Title="Lý do hẹn-HIS"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @row.LyDoHen </p>
+                </Template>              
+            </RadzenDataGridColumn> 
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="LoiDan" Title="Lời dặn-HIS"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @row.LoiDan </p>
+                </Template>              
+            </RadzenDataGridColumn> 
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="TenPT" Title="Tên PT-HIS"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.TenPT) </p>
+                 </Template>
+            </RadzenDataGridColumn> 
+
+            <RadzenDataGridColumn Width="150px" TItem="HKLayDanhSachCapNhatTinhTrang" Property="CRM_id_order" Title="TT cũ" TextAlign="TextAlign.Center">
+                <Template Context="row">                     
+                    @if(listOrder_status!=null)
+                    {
+                        var found = listOrder_status.Find(x => x.order_status == row.id_order_status);
+                        if (found != null)
+                        {
+                            @(found.name)
+                        }                        
+                    }                     
+                </Template>                
+            </RadzenDataGridColumn>                 
+            <RadzenDataGridColumn  Width="150px" TItem="HKLayDanhSachCapNhatTinhTrang" Property="new_id_order_status" Title="TT mới">
+                <Template Context="row"> 
+                    @if(listOrder_status!=null)
+                    {
+                        var found = listOrder_status.Find(x => x.order_status == row.new_id_order_status);
+                        if (found != null)
+                        {
+                            @(found.name)
+                        }                        
+                    }                   
+                </Template> 
+                <EditTemplate Context="row">
+                    <RadzenDropDown TValue="int?" @bind-Value="row.new_id_order_status"  Style="width:100%; display: block" Data="@listOrder_status" ValueProperty="order_status" TextProperty="name" Name="TenTrangThaiABR" AllowFiltering="true" />
+                    <RadzenRequiredValidator Text="Vui lòng chọn trạng thái lịch khám CRM" Component="TenTrangThaiABR" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>   
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="NgayHenPTHoacTaiKham" Title="Ngày PT/TK"> 
+                <Template Context="row">
+                    @(row.NgayHenPTHoacTaiKham!=null ? row.NgayHenPTHoacTaiKham?.ToString("dd/MM/yyyy"):"")
+                 </Template>
+            </RadzenDataGridColumn> 
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+                <Template Context="item">
+                    <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))" @onclick:stopPropagation="true">
+                    </RadzenButton>                          
+                </Template>
+                <EditTemplate Context="item">
+                    <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                    </RadzenButton>
+                    <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>  
+             <RadzenDataGridColumn Width="70px" TItem="HKLayDanhSachCapNhatTinhTrang" Property="CRM_id_order" Title="CRM?" TextAlign="TextAlign.Center">
+                <Template Context="row">
+                    @if (row.id_order_status != row.new_id_order_status)
+                    {  
+                        <RadzenButton Icon="open_in_browser" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info" Click="@(async  (args) => await UpdateRowToCRM(row))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    }
+                    else
+                    {
+                        <span>x</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>   
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Property="GhiChu" Title="Ghi chú"> 
+                <Template Context="row">
+                    <p style="white-space:normal"> @(row.GhiChu) </p>
+                 </Template>
+            </RadzenDataGridColumn> 
+            <RadzenDataGridColumn TItem="HKLayDanhSachCapNhatTinhTrang" Context="item" Filterable="false" Sortable="false" Title="Lưu mẫu" TextAlign="TextAlign.Center" Width="70px">
+                <Template Context="item">
+                    @if(item.id_order_status != item.new_id_order_status)
+                    {
+                        if (listMauCapNhatTinhTrang != null)
+                        {
+                            var found = listMauCapNhatTinhTrang.Find(x =>
+                                x.BsKham?.Trim() == item.BsKham?.Trim()
+                                && (string.IsNullOrEmpty(x.ChanDoan) ? "" : x.ChanDoan.Trim()) == (string.IsNullOrEmpty(item.ChanDoan) ? "" : item.ChanDoan.Trim())
+                                && x.id_order_status == item.id_order_status
+                                && (string.IsNullOrEmpty(x.Kham) ? "" : x.Kham.Trim()) ==  (string.IsNullOrEmpty(item.Kham) ? "" : item.Kham?.Trim())
+                                && (string.IsNullOrEmpty(x.LoiDan) ? "" : x.LoiDan.Trim()) == (string.IsNullOrEmpty(item.LoiDan) ? "" : item.LoiDan.Trim())
+                                && (string.IsNullOrEmpty(x.LyDoHen) ? "" : x.LyDoHen.Trim()) == (string.IsNullOrEmpty(item.LyDoHen)? "" : item.LyDoHen.Trim())
+                                && x.new_id_order_status == item.new_id_order_status
+                                && (string.IsNullOrEmpty(x.TenPT) ? "" : x.TenPT.Trim()) == (string.IsNullOrEmpty(item.TenPT) ? "" : item.TenPT.Trim())
+                                );
+                            if (found == null)
+                            {
+                                <RadzenButton Icon="save" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info" Click="@(async (args) => await SaveMauCapNhatTinhTrang(item))">
+                                </RadzenButton>
+                            }
+                            else
+                            {
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"  Click="@(async (args) => await DeleteMauTinhTrang(found))">
+                                </RadzenButton>
+                            }
+                        }                    
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    private DateTime TuNgay;
+    private DateTime DenNgay;
+    private List<HKLayDanhSachCapNhatTinhTrang> listChinh;    
+    private List<Order_status> listOrder_status;
+    private RadzenDataGrid<HKLayDanhSachCapNhatTinhTrang> danhMucGrid;
+    private HKLayDanhSachCapNhatTinhTrang OldRow = new HKLayDanhSachCapNhatTinhTrang();
+    private List<HKMauCapNhatTinhTrang> listMauCapNhatTinhTrang;
+    private bool checkTuLuuMau = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TuNgay = DateTime.Now;
+        DenNgay = DateTime.Now;
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {    
+            await LoadDanhSachCRMOrder_status();
+            await LoadDanhSach();
+            await LoadMauCapNhatTinhTrang();
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex.Message);
+        }
+        dialogService.Close();
+    }
+
+    public async Task LoadDanhSach()
+    {
+        commonUI.BusyDialog(dialogService, "Loading...");
+        try
+        {
+            listChinh = await henKhamClient.GetDanhSachCapNhatTinhTrang(TuNgay, DenNgay);
+        }
+        catch (Exception ex)
+        {
+            Console.Write(ex.Message);
+        }
+        dialogService.Close();
+
+    }
+    public async Task LoadMauCapNhatTinhTrang()
+    {
+        listMauCapNhatTinhTrang = await henKhamClient.GetDanhSachMauCapNhatTinhTrang();
+    }
+
+    public async Task LoadDanhSachCRMOrder_status()
+    {
+        listOrder_status = await henKhamClient.GetDanhSachCRMOrder_status();
+    }
+
+    private async Task Export()
+    {
+        var pkg = await exportFile.SaveFile(listChinh);
+        var fileBytes = pkg.GetAsByteArray();
+        pkg.Dispose();
+        var fileName = $"BaoCao.xlsx";
+        await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+    }
+
+    void EditRow(HKLayDanhSachCapNhatTinhTrang item)
+    {
+        danhMucGrid.EditRow(item);            
+        GanGiaTri(OldRow, item);
+    }
+
+    void GanGiaTri(HKLayDanhSachCapNhatTinhTrang oldRow, HKLayDanhSachCapNhatTinhTrang newRow)
+    {
+        oldRow.new_id_order_status = newRow.new_id_order_status;        
+    }
+
+    async Task UpdateRowToCRM(HKLayDanhSachCapNhatTinhTrang item)
+    {
+        commonUI.BusyDialog(dialogService,"Đang chuyển lên CRM ...");
+        try
+        {
+
+            if (item.id_order_status != item.new_id_order_status)
+            {
+                if (item.new_id_order_status != null && item.new_id_order_status != 0)
+                {                    
+                    
+                    var result = await henKhamClient.UpdateTinhTrangHenKhamToCRM(item);
+
+                    if (result != null && result != "")
+                    {
+                        toastService.ClearSuccessToasts();
+                        toastService.ShowSuccess("Lưu " + item.HoTenBN + " thành công");
+                        if (checkTuLuuMau)
+                        {
+                            await SaveMauCapNhatTinhTrang(item);
+                        }
+                        item.id_order_status = item.new_id_order_status;                        
+                        await danhMucGrid.UpdateRow(item);
+                    }
+                    else
+                    {
+                        toastService.ShowError("Lỗi");
+                    }                    
+                }
+                else
+                {
+
+                }
+            }
+            else
+            {
+                toastService.ShowWarning("Vui lòng chọn ngày hoặc dịch vụ CRM");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+
+    }
+
+    async Task SaveRow(HKLayDanhSachCapNhatTinhTrang item)
+    {            
+        await danhMucGrid.UpdateRow(item); 
+    }
+
+    void CancelEdit(HKLayDanhSachCapNhatTinhTrang item)
+    {
+        danhMucGrid.CancelEditRow(item);            
+        GanGiaTri(item, OldRow);            
+    }
+
+    public async Task UpToCRMToanBo()
+    {            
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự lưu toàn bộ?", "Lưu", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            await danhMucGrid.LastPage();
+            int SoTrang = danhMucGrid.CurrentPage;
+            for (int i=0;i<= SoTrang; i++)
+            {
+                await danhMucGrid.GoToPage(i);
+                await UpToCRMToanTrang();
+            }
+        }
+    }
+    public async Task UpToCRMToanTrang()
+    {
+        //int start = danhMucGrid.CurrentPage * danhMucGrid.PageSize;
+        //int end = ((danhMucGrid.CurrentPage+1) * danhMucGrid.PageSize<= danhMucGrid.Count? (danhMucGrid.CurrentPage + 1) * danhMucGrid.PageSize: danhMucGrid.Count);                    
+        try
+        {
+            foreach (var item in danhMucGrid.PagedView)
+            {
+                await UpdateRowToCRM(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+    }
+
+    public async Task LayTheoMau()
+    {            
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự lưu toàn bộ?", "Lưu", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            await danhMucGrid.LastPage();
+            int SoTrang = danhMucGrid.CurrentPage;
+            for (int i=0;i<= SoTrang; i++)
+            {
+                await danhMucGrid.GoToPage(i);
+                await LayTheoMauTrang();
+            }
+        }
+    }
+    public async Task LayTheoMauTrang()
+    {
+        //int start = danhMucGrid.CurrentPage * danhMucGrid.PageSize;
+        //int end = ((danhMucGrid.CurrentPage+1) * danhMucGrid.PageSize<= danhMucGrid.Count? (danhMucGrid.CurrentPage + 1) * danhMucGrid.PageSize: danhMucGrid.Count);                    
+        try
+        {
+            foreach (var item in danhMucGrid.PagedView)
+            {
+                await LayTheoMauDong(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+    }
+    public async Task LayTheoMauDong(HKLayDanhSachCapNhatTinhTrang item)
+    {
+        commonUI.BusyDialog(dialogService,"Đang chuyển lên CRM ...");
+        try
+        {
+
+            if (listMauCapNhatTinhTrang!=null)
+            {
+                var found = listMauCapNhatTinhTrang.Find(x => x.BsKham == item.BsKham
+                    && x.ChanDoan == item.ChanDoan
+                    && x.Kham == item.Kham
+                    && x.LoiDan == item.LoiDan
+                    && x.LyDoHen == item.LyDoHen
+                    && x.TenPT == item.TenPT
+                    && x.id_order_status == item.id_order_status
+                );
+                if (found!=null)
+                {
+                    item.new_id_order_status = found.new_id_order_status;
+                    await danhMucGrid.UpdateRow(item);
+                }
+            }            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+    public async Task SaveMauCapNhatTinhTrang(HKLayDanhSachCapNhatTinhTrang item)
+    {
+        commonUI.BusyDialog(dialogService,"Đang lưu mẫu ...");
+        try
+        {
+
+            if (item.id_order_status != item.new_id_order_status)
+            {
+                if (item.new_id_order_status != null && item.new_id_order_status != 0)
+                {
+
+                    HKMauCapNhatTinhTrang mau = new HKMauCapNhatTinhTrang()
+                        {
+                            BsKham = item.BsKham,
+                            LyDoHen = item.LyDoHen,
+                            LoiDan = item.LoiDan,
+                            ChanDoan = item.ChanDoan,
+                            TenPT = item.TenPT,
+                            Kham = item.Kham,
+                            id_order_status = item.id_order_status,
+                            new_id_order_status = item.new_id_order_status,
+                            TuDongChuyenCRM = true
+                        };
+                    var result = await henKhamClient.SaveMauCapNhatTinhTrang(mau);
+                    if (result !=null)
+                    {
+                        await LoadMauCapNhatTinhTrang();
+                        toastService.ShowSuccess("Lưu mẫu thành công");
+                        await danhMucGrid.UpdateRow(item);
+                    }
+                    else
+                    {
+                        toastService.ShowError("Lỗi");
+                    }                    
+                }
+                else
+                {
+
+                }
+            }
+            else
+            {
+                toastService.ShowWarning("Vui lòng chọn ngày hoặc dịch vụ CRM");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+
+    async Task DeleteMauTinhTrang(HKMauCapNhatTinhTrang item)
+    {
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự muốn xóa?", "Xóa", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No"});
+        if (Result)
+        {
+            bool ketqua = await henKhamClient.DeleteMauCapNhatTinhTrang(item.ID);
+            if (ketqua)
+            {
+                toastService.ShowSuccess("Xóa thành công");  
+            }
+            else
+            {
+                toastService.ShowError("Xóa bị lỗi!");
+            }
+        }
+
+    }
+
+    private async Task DanhSachMau()
+    {
+        var parameters = new ModalParameters();            
+        var result = Modal.Show<HisHenKhamDanhSachMauXacNhanCom>("", parameters);
+        await result.Result;   
+        
+    }
+}

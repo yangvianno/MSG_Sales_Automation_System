@@ -1,0 +1,53 @@
+﻿@using SalesAuto.Models.ViewModel.SeekWork
+@using SalesAuto.Wasm.Features
+
+<nav aria-label="Pagingnation">
+    <ul class="pagination justify-content-center">
+        @foreach(var link in _links)
+        {
+            <li @onclick="() => OnSelectedPage(link)" style="cursor:pointer" class="page-item @(link.Enabled ? null : "disabled") @(link.Active ? "active" : null) ">
+                <span class="page-link" href="#"> @link.Text</span>
+            </li>
+        }
+    </ul>
+</nav>
+
+@code {
+    [Parameter]
+    public MetaData metaData { get; set; }
+    [Parameter]
+    public int Spread { get; set; }
+    [Parameter]
+    public EventCallback<int> SelectedPage { get; set; }
+
+    private List<PagingLink> _links;
+
+    protected override void OnParametersSet()
+    {
+        CreatePaginationLinks();
+    }
+
+    private void CreatePaginationLinks()
+    {
+        _links = new List<PagingLink>();
+        _links.Add(new PagingLink(metaData.CurrentPage-1, metaData.HavePrevios, "Previos"));
+        for(int i =1; i< metaData.TotalPages; i++)
+        {
+            if(i>= metaData.CurrentPage-Spread && i<metaData.CurrentPage+Spread)
+            {
+                _links.Add(new PagingLink(i, true, i.ToString()) { Active = (metaData.CurrentPage==i)});
+            }
+        }
+        _links.Add(new PagingLink(metaData.CurrentPage + 1, metaData.HaveNext, "Next"));
+    }
+
+    private async Task OnSelectedPage(PagingLink link)
+    {
+        if(link.Page == metaData.CurrentPage || !link.Enabled)
+        {
+            return;
+        }
+        metaData.CurrentPage = link.Page;
+        await SelectedPage.InvokeAsync(link.Page);
+    }
+}

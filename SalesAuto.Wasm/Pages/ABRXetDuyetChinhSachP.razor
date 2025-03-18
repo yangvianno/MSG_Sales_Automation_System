@@ -1,0 +1,269 @@
+﻿@page "/ABRXetDuyetChinhSachP"
+@using SalesAuto.Models.Entities
+@using SalesAuto.Models.ViewModel
+@using SalesAuto.Wasm.Services
+<RadzenButton Text="Excel" Icon="grid_on" Click=@(async () => await Export()) Style="margin-bottom:20px" />
+<RadzenDataGrid @ref="danhMucABRGrid" 
+                AllowFiltering="true" 
+                AllowPaging="true" 
+                PageSize="20" 
+                AllowSorting="true" 
+                EditMode="DataGridEditMode.Single"                 
+                AllowColumnResize="true" 
+                FilterMode="FilterMode.Simple"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                Data="@listDanhMucABR" 
+                TItem="ABRDanhMucXetDuyet"
+                Render="@OnRender"
+                >
+    <GroupHeaderTemplate>
+        <div class="row">
+            <div class="col text-info" >
+                Ngày yêu cầu: @(context.Data.Items.Cast<ABRDanhMucXetDuyet>().OrderByDescending(o => o.NgayTao).FirstOrDefault().NgayTao.ToString("dd/MM/yyyy"))
+            </div>
+            <div class="col text-info">
+                <b>
+                Bệnh viện @(ListBenhVien.Find(x=>x.MaBenhVien ==context.Data.Items.Cast<ABRDanhMucXetDuyet>().OrderByDescending(o => o.MaBenhVien).FirstOrDefault().MaBenhVien)?.TenBenhVien)
+                </b>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                @if(context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault().TinhTrang == TinhTrangXetDuyet.ChuaXetDuyet)
+                {
+                    <AuthorizeView Roles="abrXetDuyet2" Context="quyen">
+                    <RadzenButton Text="Đồng ý" Click="@(args => DongY(context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault()))"></RadzenButton>
+                    <RadzenButton Text="Từ chối" Click="@(args => TuChoi(context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault()))"></RadzenButton>
+                    </AuthorizeView>
+                    
+                }
+                else
+                {
+                    if(context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault().TinhTrang== TinhTrangXetDuyet.TuChoi)
+                    {
+                        <span class="text-warning"> Không đồng ý</span>
+                    }
+                    else
+                    {
+                        <span class="text-success"> Đã đồng ý</span>
+                    }
+                }
+            </div>
+            <div class="col">
+                @if(context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault().NgayXetDuyet !=null &&
+                    context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault().TinhTrang != TinhTrangXetDuyet.ChuaXetDuyet)
+                    {
+                        <strong>
+                            <span class="text-success"> Xét duyệt ngày @(context.Data.Items.Cast<ABRDanhMucXetDuyet>().FirstOrDefault().NgayXetDuyet?.ToString("dd/MM/yyyy"))</span>
+                        </strong>
+                        
+                    }
+                    
+            </div>
+        </div>
+
+    </GroupHeaderTemplate>
+    <Columns>
+        <RadzenDataGridColumn Width="50px" TItem="ABRDanhMucXetDuyet" Property="ID" Title="ID" Visible="false" />
+        <RadzenDataGridColumn Width="50px" TItem="ABRDanhMucXetDuyet" Property="Loai" Title="" Visible="true">          
+            <Template Context="item">
+                @if(item.Loai==TrangThai.Moi)
+                {
+                    <span class="text-warning">Mới</span>
+                }
+                else
+                {
+                    <span>Cũ</span>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn Width="50px" TItem="ABRDanhMucXetDuyet" Property="STT" Title="STT" Visible="true">          
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRDanhMucXetDuyet" Property="Code" Title="Code">              
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRDanhMucXetDuyet" Property="TenCongViec" Title="Tên công việc ABR">                  
+            
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRDanhMucXetDuyet" Property="MaNhomABR" Title="Nhóm ABR">
+            <Template Context="aBRDanhMuc">
+                @if (listNhomABR.Find(x => x.ID == aBRDanhMuc.MaNhomABR) != null)
+                {
+                    @(listNhomABR.Find(x => x.ID == aBRDanhMuc.MaNhomABR).TenNhom)
+                }
+            </Template>           
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="100px" TItem="ABRDanhMucXetDuyet" Property="MucHuongVND" Title="Mức hưởng VNĐ">
+            <Template Context="item">
+                <span style="text-align:right"> @(item.MucHuongVND.ToString("##,#")) </span>
+            </Template>           
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="100px" TItem="ABRDanhMucXetDuyet" Property="MucHuongPhanTram" Title="Mức hưởng %">         
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="100px" TItem="ABRDanhMucXetDuyet" Property="TyLeGianTiep" Title="% gián tiếp">           
+        </RadzenDataGridColumn>        
+
+        <RadzenDataGridColumn Width="70px" TItem="ABRDanhMucXetDuyet" Property="TinhTheoPoolThucHien" TextAlign="TextAlign.Center" Title="Tính theo pool">
+            <Template Context="item">
+                <RadzenCheckBox @bind-Value="item.TinhTheoPoolThucHien" Disabled="true" />                
+            </Template>          
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="70px" TItem="ABRDanhMucXetDuyet" Property="TinhTheoBenhAn" TextAlign="TextAlign.Center" Title="Tính theo Bệnh Án">
+            <Template Context="item">
+                <RadzenCheckBox @bind-Value="item.TinhTheoBenhAn" Disabled="true" />
+            </Template>            
+        </RadzenDataGridColumn>
+        
+        <RadzenDataGridColumn Width="70px" TItem="ABRDanhMucXetDuyet" Property="ChuongTrinhRieng" TextAlign="TextAlign.Center" Title="Chương trình riêng">
+            <Template Context="item">
+                <RadzenCheckBox @bind-Value="item.ChuongTrinhRieng" Disabled="true" />
+            </Template>           
+        </RadzenDataGridColumn>                
+        <RadzenDataGridColumn TItem="ABRDanhMucXetDuyet" Property="GhiChu" TextAlign="TextAlign.Center" Title="Ghi chú">   
+            <Template Context="item">
+                <span style="white-space: normal">
+                    @(item.GhiChu)
+                </span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRDanhMucXetDuyet" Property="TenBenhVien" TextAlign="TextAlign.Center" Title="Ghi chú">
+            <Template Context="item">
+                <span style="white-space: normal">
+                    @(item.TenBenhVien)
+                </span>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Inject] private IABRClient aBRClient { get; set; }
+    [Inject] IToastService toastService { get; set; }
+    [Inject] ICommonUI commonUI { get; set; }        
+    [Inject] DialogService dialogService { get; set; }
+    [Inject] IExportFile exportFile { get; set; }
+    [Inject] IJSRuntime jsRuntime { get; set; }
+    [Inject] IBenhVienClient benhVienClient { get; set; }
+
+    RadzenDataGrid<ABRDanhMucXetDuyet> danhMucABRGrid;
+
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+
+    private List<ABRDanhMucXetDuyet> listDanhMucABR;    
+    private List<ABRNhom> listNhomABR;
+    private List<ABRLoaiVaiTro> listABRLoaiTinh;
+    private List<BenhVienVM> ListBenhVien;
+    bool ThemMoi = false;
+
+    protected override async void OnInitialized()
+    {
+        try
+        {
+            commonUI.BusyDialog(dialogService, "Loading...");
+            await InvokeAsync(StateHasChanged);
+            listNhomABR = await aBRClient.GetNhomABR();
+            listABRLoaiTinh = await aBRClient.GetDanhSachLoaiVaiTro();
+            ListBenhVien = await benhVienClient.GetAll();
+            await LoadDanhMucABR();
+            await InvokeAsync(StateHasChanged);
+
+        }
+        catch
+        {
+
+        }
+        dialogService.Close();
+
+    }
+
+    async Task LoadDanhMucABR()
+    {
+        listDanhMucABR = await aBRClient.GetDanhMucXetDuyetMaster();
+        foreach (var item in listDanhMucABR)
+        {
+            var found = ListBenhVien.Find(x => x.MaBenhVien == item.MaBenhVien);
+            if (found!=null)
+            {
+                item.TenBenhVien = found.TenBenhVien;
+            }
+        }
+
+    }
+
+    private async Task Export()
+    {
+        var pkg = await exportFile.SaveFile(listDanhMucABR);
+        var fileBytes = pkg.GetAsByteArray();
+        pkg.Dispose();
+        var fileName = $"BaoCao.xlsx";
+        await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+    }
+    void OnRender(DataGridRenderEventArgs<ABRDanhMucXetDuyet> args)
+    {
+        if(args.FirstRender)
+        {
+            StateHasChanged();
+            args.Grid.Groups.Add(new GroupDescriptor(){ Title = "Bệnh viện", Property = "IDXetDuyet"});
+        }
+    }
+    async Task DongY(ABRDanhMucXetDuyet aBRDanhMucXetDuyet)
+    {
+        commonUI.BusyDialog(dialogService,"Saving...");
+        try
+        {
+            var TinhTrangCu = aBRDanhMucXetDuyet.TinhTrang;
+            aBRDanhMucXetDuyet.TinhTrang = TinhTrangXetDuyet.DongY;
+            var result = await aBRClient.SaveTinhTrangXetDuyetMaster(aBRDanhMucXetDuyet);            
+            if (result !=null)
+            {                    
+                foreach(var i in listDanhMucABR.FindAll(x=>x.IDXetDuyet == aBRDanhMucXetDuyet.IDXetDuyet))
+                {
+                    i.TinhTrang = TinhTrangXetDuyet.DongY;
+                }
+                toastService.ShowSuccess("Lưu thành công");
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+                aBRDanhMucXetDuyet.TinhTrang = TinhTrangCu;
+                await InvokeAsync(StateHasChanged);
+            }            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+    async Task TuChoi(ABRDanhMucXetDuyet aBRDanhMucXetDuyet)
+    {
+        commonUI.BusyDialog(dialogService,"Saving...");
+        try
+        {
+            var TinhTrangCu = aBRDanhMucXetDuyet.TinhTrang;
+            aBRDanhMucXetDuyet.TinhTrang = TinhTrangXetDuyet.TuChoi;
+            var result = await aBRClient.SaveTinhTrangXetDuyetMaster(aBRDanhMucXetDuyet);            
+            if (result !=null)
+            {                    
+                foreach(var i in listDanhMucABR.FindAll(x=>x.IDXetDuyet == aBRDanhMucXetDuyet.IDXetDuyet))
+                {
+                    i.TinhTrang = TinhTrangXetDuyet.TuChoi;
+                }
+                toastService.ShowSuccess("Lưu thành công");
+            }
+            else
+            {
+                toastService.ShowError("Lỗi");
+                aBRDanhMucXetDuyet.TinhTrang = TinhTrangCu;
+                await InvokeAsync(StateHasChanged);
+            }            
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+}
+

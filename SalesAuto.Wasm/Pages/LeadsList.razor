@@ -1,0 +1,135 @@
+﻿@page "/leadsList"
+@attribute [Authorize]
+<h1>Leads list</h1>
+
+@if (leadSM != null)
+{
+    <div class="row">
+        <EditForm Model="@leadSM" OnSubmit="@SearchLead">
+            <div class="row">
+                <div class="col">
+                    <label>Tỉnh thành</label><br />
+                    <InputText class="from-control" @bind-Value="@leadSM.TinhThanh"> </InputText>
+                </div>
+                <div class="col">
+                    <label>Từ Ngày</label><br />
+                    <InputDate class="from-control" @bind-Value="@leadSM.TuNgay"></InputDate>
+                </div>
+                <div class="col">
+                    <label>Đến Ngày</label><br />
+                    <InputDate class="from-control" @bind-Value="@leadSM.DenNgay"></InputDate>
+                </div>
+                <div class="col">
+                    <label>Nguồn</label><br />
+                    <InputText class="from-control" @bind-Value="@leadSM.Nguon"></InputText>
+                </div>
+                <div class="col">
+                    <br />
+                    <button type="submit" class="btn btn-success"> Tìm </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@if (Leads == null)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">...</span>
+    </div>
+}
+else
+{
+    <div class="row mt-4">
+        @if (Leads.Count <= 0)
+        {
+            <div>
+                Không tìm thấy
+            </div>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td>
+                            STT
+                        </td>
+                        <td>
+                            Tên khách hàng
+                        </td>
+                        <td>
+                            Số phụ
+                        </td>
+                        <td>
+                            Ngày
+                        </td>
+                        <td>
+                            Nguồn
+                        </td>
+                        <td>
+                            Tỉnh thành
+                        </td>
+                        <td>
+                            Ngày khám
+                        </td>
+                        <td>
+                            Bệnh viện khám
+                        </td>
+                        <td>
+                            Ngày Phẫu thuật
+                        </td>
+                        <td>
+                            Bệnh viện phẫu thuật
+                        </td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Leads)
+                    {
+                        <tr>
+                            <td>
+                                @item.STT
+                            </td>
+                            <td>
+                                @item.TenKhachHang
+                            </td>
+                            <td>
+                                @item.SoPhu
+                            </td>
+                            <td>
+                                @item.Ngay
+                            </td>
+                            <td>
+                                @item.Nguon
+                            </td>
+                            <td>
+                                @item.TinhThanh
+                            </td>
+                            <td>
+                                @if (@item.BenhVienKham != "")
+                                {
+                                    @item.NgayKham.ToString("dd/MM/yyyy")
+                                }
+                            </td>
+                            <td>
+                                @item.BenhVienKham
+                            </td>
+                            <td>
+                                @if (item.BenhVienPhauThuat != "")
+                                {
+                                    @item.NgayPhauThuat.ToString("dd/MM/yyyy")
+                                }
+                            </td>
+                            <td>
+                                @item.BenhVienPhauThuat
+                            </td>
+                        </tr>
+
+                    }
+                </tbody>
+
+            </table>
+        }
+    </div>
+}

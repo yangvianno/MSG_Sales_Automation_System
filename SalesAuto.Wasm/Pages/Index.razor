@@ -1,0 +1,50 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using SalesAuto.Wasm.Pages
+@using SalesAuto.Wasm.Components
+@using SalesAuto.Wasm.Services
+@inject IBenhVienClient benhVienClient
+<AuthorizeView>
+    <Authorized>        
+        @if (context.User.IsInRole("DailyHO"))
+        {
+            <DailyReportMatSumCom>
+            </DailyReportMatSumCom>
+        }
+        else if (context.User.IsInRole("ABRMasterData"))
+        {
+            <ABRDanhMucMasterDataCom></ABRDanhMucMasterDataCom>
+        }
+        else if (context.User.IsInRole("abrXetDuyet1")|| context.User.IsInRole("abrXetDuyet2"))
+        {
+            <AbrXetDuyetCom></AbrXetDuyetCom>
+        }
+        else if (context.User.IsInRole("abrXetDuyet1")|| context.User.IsInRole("abrXetDuyet2"))
+        {
+            <AbrXetDuyetCom></AbrXetDuyetCom>
+        }
+        else if(context.User.IsInRole("abrTinhABR"))
+        {
+            <ABRTinhABRCom></ABRTinhABRCom>
+        }
+        else if(context.User.IsInRole("abrSoLuong"))
+        {
+            <ABRChuaXacDinhThucHienP></ABRChuaXacDinhThucHienP>
+        }
+        else if(context.User.IsInRole("abrUploadDanhGia"))
+        {
+            <ABRUploadBangDanhGiaCom></ABRUploadBangDanhGiaCom>
+        }
+        
+
+    </Authorized>
+    <NotAuthorized>        
+            <Login></Login>        
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {        
+    }
+}

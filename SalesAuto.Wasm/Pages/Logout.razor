@@ -1,0 +1,21 @@
+﻿@page "/logout"
+@using SalesAuto.Wasm.Services;
+
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject BlazoradeMsalService MsalService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+
+@code {
+    protected async override Task OnInitializedAsync()
+    {
+        var LoginType = await localStorage.GetItemAsync<string>("userType");
+        await AuthService.Logout();        
+        if (LoginType == "msal")
+        {
+            //await MsalService.LogoutAsync();
+        }
+        NavigationManager.NavigateTo("/");
+    } 
+}

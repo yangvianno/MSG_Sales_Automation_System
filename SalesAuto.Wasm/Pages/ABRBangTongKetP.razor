@@ -1,0 +1,36 @@
+﻿@page "/ABRBangTongKetP"
+@using SalesAuto.Wasm.Components
+<ABRQuaTrinhTinhABR Nam=@DenNgay.Year Thang=@DenNgay.Month ></ABRQuaTrinhTinhABR>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <table>
+                <tr>
+                    <td>
+                        <RadzenLabel Text="Loại báo cáo " />
+                    </td>
+                    <td>
+                        <RadzenDropDown @bind-Value="LoaiBaoCao" Data="@listLoaiBaoCao" TextProperty="Value" ValueProperty="Key"/>
+                    </td>
+                    <td>
+                        <RadzenLabel Text="Nhóm " />
+                    </td>
+                    <td>
+                        <RadzenDropDown @bind-Value="NhomCongViec" Data="@listNhomCongViec" />
+                    </td>
+                    <td>
+                        <TuNgayDenNgay @bind-TuNgay="TuNgay" @bind-DenNgay="DenNgay" OKClick="LoadDanhSach" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+@if (colinfor != null && listChinh != null)
+{
+    <DynGrid listChinh="listChinh" Col="colinfor" />  
+}
+else
+{
+    <span> Không có dữ liệu </span>
+}

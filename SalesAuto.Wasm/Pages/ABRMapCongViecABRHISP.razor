@@ -1,0 +1,96 @@
+﻿@page "/ABRMapCongViecABRHISP"
+@using SalesAuto.Models.ViewModel;
+
+<RadzenButton Icon="refresh" style="margin-bottom: 10px" ButtonStyle="ButtonStyle.Info" Text="Reload" Click="@(async () => await LoadDanhSachMapCongViecABRHIS())" />
+
+<RadzenButton Text="Excel" Icon="grid_on" Click=@(async () => await Export()) Style="margin-bottom:20px" />
+<RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true" EditMode="DataGridEditMode.Single"
+                AllowGrouping="true"
+                AllowColumnResize="true"
+                FilterMode="FilterMode.Simple"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"                
+                Data="@listChinh" TItem="ABRMapCongViecABRHISVM" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <Columns>
+        <RadzenDataGridColumn Width="50px" TItem="ABRMapCongViecABRHISVM" Property="ID" Title="ID" />
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="MaCV" Title="Mã HIS">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="200px" TItem="ABRMapCongViecABRHISVM" Property="TenCongViec" Title="Tên công việc HIS">
+           @* <EditTemplate Context="aBRDanhMuc">
+                <RadzenDropDown @bind-Value="aBRDanhMuc.MaCV" Data="@listConViecHis" TextProperty="TenCongViec" ValueProperty="MaCV" Style="width:100%" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFiltering="true">
+                </RadzenDropDown>
+            </EditTemplate>*@
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="NhomCongViecThongKe" Title="Nhóm công việc HIS">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="KhoaPhauThuat" Title="Khoa PT">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="LoaiPhauThuat" Title="Loại PT">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="GiaTien" Title="Doanh thu HIS">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="IDDanhMucABR" Title="ID ABR">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="Code" Title="Code ABR">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="200px" TItem="ABRMapCongViecABRHISVM" Property="TenCongViecABR" Title="Ten ABR">
+            <EditTemplate Context="aBRDanhMuc">
+                <RadzenDropDown @bind-Value="aBRDanhMuc.IDDanhMucABR" Data="@listDanhMucABR" TextProperty="TenCongViec" ValueProperty="ID" Style="width:100%" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowFiltering="true">
+                </RadzenDropDown>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="QuyRa" Title="Quy đổi">
+            <EditTemplate Context="item">
+                <RadzenNumeric Format="0.00" @bind-Value="item.QuyRa" Style="width: 100%; display: block" Name="QuyRa" />
+                <RadzenRequiredValidator Text="Vui lòng điền mức quy đổi" Component="QuyRa" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="DoanhThuTinhABR" Title="Doanh thu ABR" TextAlign="TextAlign.Right">
+            <Template Context="item">
+                @(item.DoanhThuTinhABR.ToString("##,#"))
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenNumeric @bind-Value="item.DoanhThuTinhABR" Style="width: 100%; display: block; text-align:left" Name="DoanhThuTinhABR"/>
+                <RadzenRequiredValidator Text="Vui lòng điền mức quy đổi" Component="DoanhThuTinhABR" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="70px" TItem="ABRMapCongViecABRHISVM" Property="TinhTheoDoanhThu" TextAlign="TextAlign.Center" Title="Theo DT">
+            <Template Context="item">
+                <RadzenCheckBox @bind-Value="item.TinhTheoDoanhThu" Disabled="true" />
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenCheckBox @bind-Value="item.TinhTheoDoanhThu" Style="display: block" Name="ChuongTrinhRieng" />
+            </EditTemplate>
+        </RadzenDataGridColumn> 
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="NhomABR" Title="Nhóm ABR">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="MucHuongVND" Title="Mức hưởng VND">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Property="MucHuongPhanTram" Title="Mức hưởng %">
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Context="aBRDanhMuc" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+            <Template Context="aBRDanhMuc">
+                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(aBRDanhMuc))" @onclick:stopPropagation="true">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="note_add" Size="ButtonSize.Small" Click="@(async (args) => await CopyRow(aBRDanhMuc))">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="aBRDanhMuc">
+                <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(aBRDanhMuc))">
+                </RadzenButton>
+                <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(async (args) => await CancelEdit(aBRDanhMuc))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ABRMapCongViecABRHISVM" Context="aBRDanhMuc" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="50px">
+            <Template Context="aBRDanhMuc">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(async (args) => await DeleteRow(aBRDanhMuc))" @onclick:stopPropagation="true">
+                </RadzenButton>                
+            </Template>
+            <EditTemplate Context="aBRDanhMuc">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(async(args) => await DeleteRow(aBRDanhMuc))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>

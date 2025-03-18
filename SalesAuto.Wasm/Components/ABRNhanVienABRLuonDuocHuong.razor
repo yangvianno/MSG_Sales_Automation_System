@@ -1,0 +1,76 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+<div class="card" style="width: 20rem;">
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true"
+                    EditMode="DataGridEditMode.Single"
+                    AllowColumnResize="true"
+                    FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    Data="@listABRDanhMuc" TItem="ABRDanhMuc"
+                    ColumnWidth="100px">
+        <Columns>
+            <RadzenDataGridColumn Width="20px" TItem="ABRDanhMuc" Property="ID" Title="Chọn" Visible="true">
+                <Template Context="item">
+                    @{
+                        var found = values.Find(x => x == item.ID);
+                        if (found != 0)
+                        {
+                            <RadzenCheckBox Value=@true Change=@(async (args) => await OnChange(args, item)) TValue="bool"> </RadzenCheckBox>
+
+                        }
+                        else
+                        {
+                            <RadzenCheckBox Value=@false Change=@(async (args) => await OnChange(args, item)) TValue="bool"> </RadzenCheckBox>
+                        }
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="100px" TItem="ABRDanhMuc" Property="TenCongViec" Title="Tên ABR" Visible="true">
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+    <button @onclick="Close" class="btn btn-primary">OK</button>
+</div>
+    @code {
+        [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+        [Parameter]
+        public ABRNhanVien NhanVien { get; set; }
+        [Parameter]
+        public List<ABRDanhMuc> listABRDanhMuc { get; set; }
+
+        RadzenDataGrid<ABRDanhMuc> danhMucGrid;
+
+        List<int> values { get; set; }
+
+        protected override void OnParametersSet()
+        {
+
+            values = new List<int>();
+            foreach (var item in NhanVien.ABRLuonDuocHuong)
+            {
+                values.Add(item.ID);
+            }
+        }
+
+        async Task OnChange(bool value, ABRDanhMuc item)
+        {
+            if (value)
+            {
+                if (await aBRClient.AddNhanVienABRLuonDuocHuong(NhanVien.ID, item.ID))
+                {
+                    values.Add(item.ID);
+                }
+            }
+            else
+            {
+                if (await aBRClient.DeleteNhanVienABRLuonDuocHuong(NhanVien.ID, item.ID))
+                {
+                    values.Remove(item.ID);
+                }
+            }
+            await danhMucGrid.UpdateRow(item);            
+        }
+        async Task Close() => await BlazoredModal.CloseAsync(ModalResult.Ok(true));
+    }

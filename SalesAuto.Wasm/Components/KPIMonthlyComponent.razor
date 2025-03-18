@@ -1,0 +1,60 @@
+﻿<h3>KIP Monthly Input</h3>
+
+<div class="row">
+    <div class="col"></div>
+    <div class="col">
+        <label for="nam">Năm</label>
+        <input id="nam" type="number" @bind-value="nam" />
+        <button class="btn btn-success" @onclick="@(async()=> await loadList())"> load </button>
+    </div>
+    <div class="col">
+        <button class="btn btn-success" @onclick="@(async()=> await SaveList())"> Save </button>
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        @if (listKPIMonthly == null)
+        {
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">...</span>
+            </div>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            Tháng
+                        </th>
+                        <th>
+                            Actual Digital Lasik cost
+                        </th>
+                        <th>
+                            Actual Branding & Operation
+                        </th>
+                        <th>Budget</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in listKPIMonthly)
+                    {
+                        <tr>
+                            <td>@item.Thang</td>
+                            <td>
+                                <input type="number" @bind-value="item.ActualDigitalCost" />
+                             </td>
+                            <td>
+                                <input type="number" @bind-value="item.ActualBranding" />
+                             </td>
+                            <td>
+                                <input type="number" @bind-value="item.BudgetDigitalCost"/>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+
+</div>

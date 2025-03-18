@@ -1,0 +1,82 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+
+
+<RadzenCard Style="width: 50rem;" >
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true" EditMode="DataGridEditMode.Single"                 
+                    AllowColumnResize="true" 
+                    FilterMode="FilterMode.Simple"
+                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                    SelectionMode="DataGridSelectionMode.Single"
+                    AllowRowSelectOnRowClick = "false"
+                    @bind-Value=@selectedPools
+                    Data="@listChinh" TItem="AbrPool">
+        <Columns>               
+            <RadzenDataGridColumn TItem="AbrPool" Width="60px" Sortable="false" Filterable="false">               
+                <Template Context="row">
+                     <RadzenCheckBox TriState="false" Value="@(selectedPools != null && selectedPools.FirstOrDefault(x=>x.ID == row.ID)!=null)" 
+                        TValue="bool" Change=@(async (args) => await OnChange(args, row))>
+                     </RadzenCheckBox>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AbrPool" Property="TenPool" Title="Tên">               
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>  
+</RadzenCard>
+
+
+@code {
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; }
+
+    [Parameter]
+    public ABRDanhMuc aBRDanhMuc { get; set; }
+    RadzenDataGrid<AbrPool> danhMucGrid;
+    List<AbrPool> listChinh;
+    IList<AbrPool> selectedPools;
+    protected override async void OnParametersSet()
+    {
+        listChinh = await aBRClient.GetDanhSachPool();
+        selectedPools = await aBRClient.GetPoolHuongTheoDanhMuc(aBRDanhMuc.ID);
+        if (selectedPools==null)
+        {
+            selectedPools = new List<AbrPool>();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+    async Task OnChange(bool value, AbrPool item)
+    {        
+
+        if (value)
+        {            
+            if (selectedPools != null)
+            {
+                selectedPools.Clear();
+                selectedPools.Add(item);
+            }
+
+        }
+        else
+        {
+            if (selectedPools != null)
+            {
+                selectedPools.Clear();
+            }
+
+        }
+        await LuuPoolHuongTheoDanhMuc();
+        await danhMucGrid.UpdateRow(item);            
+    }
+    async Task LuuPoolHuongTheoDanhMuc()
+    {
+        await aBRClient.DeletePoolHuongTheoDanhMuc(aBRDanhMuc.ID);
+        foreach (var item in selectedPools)
+        {
+            await aBRClient.SavePoolHuongTheoDanhMuc(aBRDanhMuc.ID, item.ID);
+        }
+
+    }
+    async Task Close() => await BlazoredModal.CloseAsync(ModalResult.Ok(true));
+
+}

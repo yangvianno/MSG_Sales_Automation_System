@@ -1,0 +1,32 @@
+
+
+/****** Object:  StoredProcedure [dbo].[proc_LayChiTietXuatTheoLo]    Script Date: 03/07/2021 9:54:49 SA ******/
+DROP PROCEDURE [dbo].[proc_LayChiTietXuatTheoLo]
+GO
+
+/****** Object:  StoredProcedure [dbo].[proc_LayChiTietXuatTheoLo]    Script Date: 03/07/2021 9:54:49 SA ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+create proc [dbo].[proc_LayChiTietXuatTheoLo]
+(
+	@MaKhoThuocLe int = 1,
+	@MaThuoc nvarchar(20),
+	@MaLo nvarchar(20),
+	@HSD dateTime
+)
+as
+	select ID,MATHUOC,MALO, HSD, SOLUONG
+	from ChiTiet_PXNT
+	where
+	MATHUOC = @MaThuoc
+	and MALO= @MaLo 
+	and HSD= @HSD 
+	and isnull(MaKhoThuocLe,1) = @MaKhoThuocLe
+
+GO
+
+

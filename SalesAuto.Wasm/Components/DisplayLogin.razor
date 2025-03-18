@@ -1,0 +1,43 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService localStorage
+ <AuthorizeView>
+    <Authorized>                    
+            <ChonBenhVienComponent />  
+                        
+            @if(LoginType=="msal")
+            {
+                <span>
+                Hello 
+                @if (cls != null)
+                {
+                    @if (cls.ContainsKey("name"))
+                    {
+                        @(" " + cls["name"].ToString());
+                    }                    
+                }
+                <a href="/logout">Logout</a>
+                </span>
+            }
+            else
+            {
+                <span>
+                    Hello @context.User.Identity.Name
+                    <a href="/logout">Logout</a>
+                    <a href="/ChangePassP">Đổi pass</a>
+                </span>
+            }
+    </Authorized>
+    <NotAuthorized>
+        <a href="/login" class="ml-md-auto">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string LoginType = "";
+    private Dictionary<string, object> cls;
+    protected override async Task OnInitializedAsync()
+    {
+        LoginType = await localStorage.GetItemAsync<string>("userType");
+        cls = await localStorage.GetItemAsync<Dictionary<string, object>>("msalclaim");
+    }
+
+}

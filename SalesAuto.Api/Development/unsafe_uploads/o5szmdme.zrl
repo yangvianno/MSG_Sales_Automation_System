@@ -1,0 +1,35 @@
+USE [QLBV]
+GO
+
+/****** Object:  StoredProcedure [dbo].[proc_LaySoLoKhongDung]    Script Date: 03/07/2021 9:37:34 SA ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER proc [dbo].[proc_LaySoLoKhongDung]
+@MaKhoThuocLe int
+as
+
+select Nhap.MATHUOC as MaThuocNhap, Nhap.MaLo as MaLoNhap, Nhap.HSD as HSDNhap, nhap.SoLuong as SoLuongNhap
+		,Xuat.MATHUOC as MaThuocXuat , Xuat.MaLo as MaLoXuat, Xuat.HSD as HSDXuat, Xuat.SoLuong as SoLuongXuat, (isnull(nhap.SoLuong,0)-isnull(xuat.SoLuong,0)) as ChenhLech
+		, ISNULL(Nhap.TENTHUOC,Xuat.TENTHUOC) as TenThuoc
+from
+(
+select CHITIET_PNNT.MATHUOC,MALO,HSD, SUM(CHITIET_PNNT.soluong) as SoLuong, DM_THUOC.TENTHUOC
+from CHITIET_PNNT inner join DM_THUOC on CHITIET_PNNT.MATHUOC= DM_THUOC.MATHUOC
+where MaKhoThuocLe=@MaKhoThuocLe
+group by CHITIET_PNNT.MATHUOC,MALO,HSD,DM_THUOC.TENTHUOC
+) nhap
+full join
+(select CHITIET_PXNT.MATHUOC,MALO,HSD, SUM(CHITIET_PXNT.soluong) as SoLuong,DM_THUOC.TENTHUOC
+from CHITIET_PXNT inner join DM_THUOC on CHITIET_PXNT.MATHUOC= DM_THUOC.MATHUOC
+where MaKhoThuocLe=@MaKhoThuocLe
+group by CHITIET_PXNT.MATHUOC,MALO,HSD,DM_THUOC.TENTHUOC
+) Xuat on nhap.MAThuoc = Xuat.MaThuoc and Nhap.MALO = Xuat.MaLo and Nhap.HSD= Xuat.HSD
+
+
+GO
+
+

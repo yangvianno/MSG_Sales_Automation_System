@@ -1,0 +1,103 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Models.ViewModel
+<h3>Danh mục master</h3>
+@if (listChinh != null)
+{
+    <div>
+    <RadzenDataGrid @ref="danhMucABRGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true" EditMode="DataGridEditMode.Single"                 
+                AllowColumnResize="true" 
+                FilterMode="FilterMode.Simple"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                Data="@listChinh" TItem="ABRDanhMuc"
+                SelectionMode="DataGridSelectionMode.Single"
+                @bind-Value=@selectedDanhMuc
+                >
+        <Columns>
+            <RadzenDataGridColumn Width="50px" TItem="ABRDanhMuc" Property="ID" Title="ID" Visible="false" />
+            <RadzenDataGridColumn Width="50px" TItem="ABRDanhMuc" Property="STT" Title="STT" Visible="true">
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenNumeric @bind-Value="aBRDanhMuc.STT" Style="width: 100%; display: block" Name="STT" />
+                    <RadzenRequiredValidator Text="Vui lòng điền STT" Component="STT" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRDanhMuc" Property="Code" Title="Code">
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenTextBox @bind-Value="aBRDanhMuc.Code" Style="width:100%; display: block" Name="Code" />
+                    <RadzenRequiredValidator Text="Vui lòng điền code" Component="Code" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRDanhMuc" Property="TenCongViec" Title="Tên công việc ABR">
+                <EditTemplate Context="aBRDanhMuc">
+                    <RadzenTextBox @bind-Value="aBRDanhMuc.TenCongViec" Style="width:100%; display: block" Name="TenCongViec" />
+                    <RadzenRequiredValidator Text="Vui lòng điền Tên công việc" Component="TenCongViec" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRDanhMuc" Property="MaNhomABR" Title="Nhóm ABR">
+                <Template Context="aBRDanhMuc">
+                    @if (listNhomABR.Find(x => x.ID == aBRDanhMuc.MaNhomABR) != null)
+                    {
+                        @(listNhomABR.Find(x => x.ID == aBRDanhMuc.MaNhomABR).TenNhom)
+                    }
+                </Template>            
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="100px" TItem="ABRDanhMuc" Property="MucHuongVND" Title="Mức hưởng VNĐ">
+                <Template Context="item">
+                    <span style="text-align:right"> @(item.MucHuongVND.ToString("##,#")) </span>
+                </Template>            
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="100px" TItem="ABRDanhMuc" Property="MucHuongPhanTram" Title="Mức hưởng %">            
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn Width="100px" TItem="ABRDanhMuc" Property="TyLeGianTiep" Title="% gián tiếp">            
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="70px" TItem="ABRDanhMuc" Property="TinhTheoBenhAn" TextAlign="TextAlign.Center" Title="Tính theo Bệnh Án">
+                <Template Context="item">
+                    <RadzenCheckBox @bind-Value="item.TinhTheoBenhAn" Disabled="true" />
+                </Template>            
+            </RadzenDataGridColumn>        
+            <RadzenDataGridColumn Width="70px" TItem="ABRDanhMuc" Property="ChuongTrinhRieng" TextAlign="TextAlign.Center" Title="Chương trình riêng">
+                <Template Context="item">
+                    <RadzenCheckBox @bind-Value="item.ChuongTrinhRieng" Disabled="true" />
+                </Template>            
+            </RadzenDataGridColumn>       
+        </Columns>
+    </RadzenDataGrid>
+    </div>
+    <div class="row">
+        <div class="col">
+            <button @onclick="Close">Cancel</button>
+        </div>
+        <div class="col">
+            <button @onclick="OK">OK</button>
+        </div>
+    </div>
+}
+@code {
+    [CascadingParameter] BlazoredModalInstance BlazoredModal { get; set; } = default!;
+    [Parameter]
+    public List<ABRDanhMuc> listChinh { get; set; }
+
+    [Parameter]
+    public List<ABRNhom> listNhomABR { get; set; }
+
+    public RadzenDataGrid<ABRDanhMuc> danhMucABRGrid;
+    IList<ABRDanhMuc> selectedDanhMuc;
+    private async Task Close()
+    {
+        await BlazoredModal.CancelAsync();
+    }
+    private async Task OK()
+    {
+        if (selectedDanhMuc?.Any() == true)
+        {
+            await BlazoredModal.CloseAsync(ModalResult.Ok(selectedDanhMuc[0].ID));
+        }
+        else
+        {
+            await BlazoredModal.CloseAsync(ModalResult.Ok(0));
+        }
+
+    }
+
+}

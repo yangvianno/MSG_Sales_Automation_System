@@ -1,0 +1,426 @@
+﻿@using SalesAuto.Models.Entities;
+@using SalesAuto.Models.ViewModel;
+@using SalesAuto.Wasm.Services;
+
+<h3>Phân quyền user xác nhận dịch vụ trên his</h3>
+<div class="container-fluid">   
+    <div class="row">
+        <div class="col-5">
+            <AuthorizeView Roles="abrXacNhanHIS">
+                <RadzenButton Icon="load" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Medium" Text="Load" Click="@(async () => await LoadDanhSach())" />
+                <RadzenButton Icon="save" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" Text="Lưu toàn bộ" Click="@(async () => await LuuToanBo())" />
+                <RadzenButton Icon="save" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" Text="Lưu trang" Click="@(async () => await  LuuToanTrang())" />
+            </AuthorizeView>
+        </div>        
+        <div class="col-5" style="text-align:right">
+            <AuthorizeView Roles="abrXacNhanHIS">
+                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" Text="Xóa toàn bộ" Click="@(async () => await XoaToanBo())" />
+                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" Text="Xóa Trang" Click="@(async () => await XoaTrang())" />
+            </AuthorizeView>
+        </div>
+    </div>
+</div>
+@if (listChinh != null && listUser != null)
+{
+    <RadzenButton Text="Excel" Icon="grid_on" Click=@(async () => await Export()) Style="margin-bottom:20px" />
+
+    <RadzenDataGrid @ref="danhMucGrid" AllowFiltering="true" AllowPaging="true" PageSize="20" AllowSorting="true"
+                EditMode="DataGridEditMode.Single"
+                AllowColumnResize="true"
+                FilterMode="FilterMode.Simple"
+                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                Data="@listChinh"
+                AllowGrouping="true"
+                TItem="ABRUserKetThucCongViecHisVM"  
+                IsLoading="isWating"
+                >
+        <Columns>
+            <RadzenDataGridColumn Width="150px" TItem="ABRUserKetThucCongViecHisVM" Property="MaCV" Title="Mã dịch vụ HIS">            
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Property="TenCV" Title="Tên dịch vụ His">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Property="NhomCongViecThongKe" Title="Nhóm công việc TK">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Property="Khoa" Title="Khoa">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Property="NhomPT" Title="Nhóm PT">
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Property="UserName" Title="User xác nhận">
+                <Template Context="item">
+                    @if (item.ID == null || item.ID== Guid.Empty)
+                    {
+                        <RadzenLabel Style="color:red" Text="@item.UserName"></RadzenLabel>
+
+                    }
+                    else
+                    {
+                        <RadzenLabel Text="@item.UserName"></RadzenLabel>
+                    }
+                </Template>
+                <EditTemplate Context="item">
+                    <RadzenDropDown TextBox @bind-Value="item.IDUser" Style="width:100%; display: block" Data="@listUser" ValueProperty="Id" TextProperty="UserName" AllowFiltering="true"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                Change=@(args => ChonNhanVien(args,item)) />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+                <AuthorizeView Roles="abrXacNhanHIS">
+                    <RadzenDataGridColumn Width="70px" TItem="ABRUserKetThucCongViecHisVM" Filterable=false Title="Copy">
+                        <Template Context="item">
+                            @if (!string.IsNullOrEmpty(item.UserName))
+                            {
+                                var a = danhMucGrid.PagedView.FirstOrDefault();
+                                if (a != null)
+                                {
+                                    if (a.ID == item.ID && item.ID != Guid.Empty )
+                                    {
+                                        <RadzenButton Icon="get_app" Text="All" Size="ButtonSize.Small" Click="@(async(args) => await CopyRow(item))" />
+                                    }
+                                }
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+                        <Template Context="item">
+                            <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(args => EditRow(item))" @onclick:stopPropagation="true">
+                            </RadzenButton>
+                        </Template>
+                        <EditTemplate Context="item">
+                            <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@((args) => SaveRow(item))">
+                            </RadzenButton>
+                            <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@((args) => CancelEdit(item))">
+                            </RadzenButton>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="50px">
+                        <Template Context="item">
+                            <RadzenButton Icon="save" Size="ButtonSize.Small" Click="@(args => SaveRow(item))" @onclick:stopPropagation="true">
+                            </RadzenButton>
+                        <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="note_add" Size="ButtonSize.Small" Click="@(async (args) => await CopyNewRow(item))">
+                        </RadzenButton>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="ABRUserKetThucCongViecHisVM" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="50px">
+                        <Template Context="item">
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))" @onclick:stopPropagation="true">
+                            </RadzenButton>
+                        </Template>
+                        <EditTemplate Context="item">
+                            <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="close" Size="ButtonSize.Small" Click="@(args => DeleteRow(item))">
+                            </RadzenButton>
+                        </EditTemplate>
+                    </RadzenDataGridColumn>
+            </AuthorizeView>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    [Inject] IABRClient aBRClient { get; set; }
+    [Inject] IToastService toastService { get; set; }
+    [Inject] ICommonUI commonUI { get; set; }
+    [Inject] DialogService dialogService { get; set; }
+    [Inject] IExportFile exportFile { get; set; }
+    [Inject] IJSRuntime jsRuntime { get; set; }
+
+    public DateTime DenNgay;
+    private List<ABRUserKetThucCongViecHisVM> listChinh;
+    private List<ABRUserKetThucCongViecHisVM> listChinhShow;
+    private List<UserVM> listUser;    
+    private bool NhanVienKhacHis = false;
+    public bool isLoading = false;
+    private int count;
+    private bool isWating = false;
+
+    RadzenDataGrid<ABRUserKetThucCongViecHisVM> danhMucGrid;
+
+
+    protected override async Task OnInitializedAsync()
+    {   
+        await LoadDanhSach();
+    }
+    void LoadData(LoadDataArgs args)
+    {
+        Console.WriteLine($"Skip: {args.Skip}, Top: {args.Top}");
+
+        var query = listChinh.AsQueryable();
+
+        //if (!string.IsNullOrEmpty(args.Filter))
+        //{
+        //    query = query.Where(args.Filter);
+        //}        
+        //if (!string.IsNullOrEmpty(args.OrderBy))
+        //{
+        //    query = query.OrderBy(args.OrderBy);
+        //}
+
+        listChinhShow = query.Skip(args.Skip.Value).Take(args.Top.Value).ToList();
+
+        count = listChinh.Count();
+    }
+
+    private async Task LoadListUser()
+    {
+        listUser = await aBRClient.LayUserKetThucHis();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadDanhSach()
+    {
+        isWating = true;
+        await LoadListUser();
+        try
+        {
+            listChinh = await aBRClient.GetUserKetThucCongViecHis();
+            if (listChinh != null)
+            {
+                foreach (var item in listChinh)
+                {
+                    if (item.IDUser!=null && item.IDUser!=null)
+                    {
+                        var found = listUser.Find(x => x.Id == item.IDUser);
+                        if (found != null)
+                        {
+                            item.UserName = found.UserName;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            toastService.ShowInfo("Load bị lỗi+" + ex.Message);
+        }
+
+        isWating = false;
+    }
+    void InsertRow()
+    {
+        toastService.ShowInfo("Thêm danh muc mói");
+        danhMucGrid.InsertRow(new ABRUserKetThucCongViecHisVM());
+        ThemMoi = true;
+    }  
+    async Task CopyNewRow(ABRUserKetThucCongViecHisVM item)
+    {
+        var newItem = new ABRUserKetThucCongViecHisVM();
+        newItem.IDUser = item.IDUser;
+        newItem.UserName = item.UserName;
+        newItem.TenCV = item.TenCV;
+        newItem.NhomCongViecThongKe = item.NhomCongViecThongKe;
+        newItem.MaCV = item.MaCV;        
+        await danhMucGrid.InsertRow(newItem);
+        ThemMoi = true;
+    }
+    ABRUserKetThucCongViecHisVM OldRow = new ABRUserKetThucCongViecHisVM();
+    private bool ThemMoi;
+
+    async Task EditRow(ABRUserKetThucCongViecHisVM item)
+    {
+        await danhMucGrid.EditRow(item);
+        ThemMoi = false;
+        GanGiaTri(OldRow, item);
+    }
+
+    private async Task CopyRow(ABRUserKetThucCongViecHisVM item)
+    {
+        isWating = true;
+        try
+        {
+            int currentPage = danhMucGrid.CurrentPage;
+            await danhMucGrid.LastPage();
+            int SoTrang = danhMucGrid.CurrentPage;
+            for (int i = 0; i <= SoTrang; i++)
+            {
+                await danhMucGrid.GoToPage(i);
+                foreach (var localitem in danhMucGrid.PagedView)
+                {
+                    if (localitem.IDUser == null)
+                    {
+                        localitem.IDUser = item.IDUser;
+                        localitem.UserName = item.UserName;
+                        await danhMucGrid.UpdateRow(localitem);
+                    }
+                }
+            }
+            await danhMucGrid.GoToPage(currentPage);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        isWating = false;
+    }
+
+    void GanGiaTri(ABRUserKetThucCongViecHisVM oldRow, ABRUserKetThucCongViecHisVM newRow)
+    {
+        oldRow.ID = newRow.ID;
+        oldRow.IDUser = newRow.IDUser;
+        oldRow.TenCV = newRow.TenCV;
+        oldRow.MaCV = newRow.MaCV;
+        oldRow.UserName = newRow.UserName;        
+
+    }
+
+    async Task SaveRow(ABRUserKetThucCongViecHisVM item)
+    {
+        if (item.IDUser.HasValue)
+        {
+            var result = await aBRClient.SaveUserKetThucCongViecHis(
+                new ABRUserKetThucCongViecHis()
+                    {
+                        ID = item.ID,
+                        IDUser = item.IDUser,
+                        MaCV = item.MaCV
+                    }                
+                );
+            if (result != null)
+            {
+                toastService.ClearSuccessToasts();
+                toastService.ShowSuccess("Lưu " + item.TenCV + " thành công ");
+                item.ID = result.ID;
+                var found = listUser.Find(x => x.Id == item.IDUser);
+                if (found != null)
+                {
+                    item.UserName = found.UserName;
+                }
+                await danhMucGrid.UpdateRow(item);
+            }
+            else
+            {
+
+                toastService.ShowError("Lỗi");
+
+            }
+        }
+        else
+        {
+            toastService.ShowWarning("Vui lòng chọn nhân viên!");
+        }
+    }
+
+    void CancelEdit(ABRUserKetThucCongViecHisVM item)
+    {
+        danhMucGrid.CancelEditRow(item);
+        if (!ThemMoi)
+        {
+            GanGiaTri(item, OldRow);
+        }
+    }
+
+    async Task DeleteRow(ABRUserKetThucCongViecHisVM item, bool Confirm = false)
+    {
+        if (item.ID != Guid.Empty)
+        {
+            bool Result = true;
+            if (Confirm)
+            {
+                Result = (bool)await dialogService.Confirm("Bạn thực sự muốn xóa?", "Xóa", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+            }
+            if (Result)
+            {
+                bool ketqua = await aBRClient.DeleteUserKetThucCongViecHis(item.ID);
+                if (ketqua)
+                {
+                    toastService.ClearInfoToasts();
+                    toastService.ShowSuccess("Xóa thành công");
+                    item.IDUser = null;
+                    item.UserName = null;
+                    await danhMucGrid.UpdateRow(item);
+                }
+                else
+                {
+                    toastService.ShowError("Xóa bị lỗi!");
+                }
+            }
+        }
+        else
+        {
+            toastService.ShowSuccess("Dịch vụ này chưa lưu nên không cần xóa!");
+        }
+
+    }
+
+    public async Task LuuToanTrang()
+    {
+        //int start = danhMucGrid.CurrentPage * danhMucGrid.PageSize;
+        //int end = ((danhMucGrid.CurrentPage+1) * danhMucGrid.PageSize<= danhMucGrid.Count? (danhMucGrid.CurrentPage + 1) * danhMucGrid.PageSize: danhMucGrid.Count);
+        isWating = true;
+        try
+        {
+            foreach (var item in danhMucGrid.PagedView)
+            {
+                await SaveRow(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        isWating = false;
+    }
+
+    public async Task LuuToanBo()
+    {
+        dialogService.Close();
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự lưu toàn bộ?", "Lưu", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            await danhMucGrid.LastPage();
+            int SoTrang = danhMucGrid.CurrentPage;
+            for (int i = 0; i <= SoTrang; i++)
+            {
+                await danhMucGrid.GoToPage(i);
+                await LuuToanTrang();
+            }
+        }
+    }
+
+    public async Task XoaTrang()
+    {
+        isWating = true;
+        try
+        {
+            foreach (var item in danhMucGrid.PagedView)
+            {
+                await DeleteRow(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        isWating = false;
+    }
+    public async Task XoaToanBo()
+    {
+        bool Result = (bool)await dialogService.Confirm("Bạn thực sự muốn xóa toàn bộ?", "Lưu", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (Result)
+        {
+            await danhMucGrid.LastPage();
+            int SoTrang = danhMucGrid.CurrentPage;
+            for (int i = 0; i <= SoTrang; i++)
+            {
+                await danhMucGrid.GoToPage(i);
+                await XoaTrang();
+            }
+        }
+    }
+
+    void LoadData(LoadDataArgs args, ABRUserKetThucCongViecHisVM item)
+    {
+        args.Filter = "BBB";
+        InvokeAsync(StateHasChanged);
+    }
+    private async Task Export()
+    {
+        var pkg = await exportFile.SaveFile(listChinh);
+        var fileBytes = pkg.GetAsByteArray();
+        pkg.Dispose();
+        var fileName = $"BaoCao.xlsx";
+        await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+    }
+    void ChonNhanVien(object value, ABRUserKetThucCongViecHisVM item)
+    {       
+        
+    }
+
+}

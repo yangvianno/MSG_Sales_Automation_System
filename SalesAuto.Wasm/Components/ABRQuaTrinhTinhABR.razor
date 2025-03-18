@@ -1,0 +1,144 @@
+﻿@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@inject IABRClient aBRClient
+@inject IBenhVienClient benhVienClient
+
+<table align="center">
+    <tr>
+        <td width="20%" style="text-align:center">
+            @if(DaTinhSoLuong)
+            {
+                <div class="alert alert-primary" role="alert">                      
+                    <RadzenIcon Icon="check_circle"/>                    
+                    1/ Đã xác nhận nhân viên ABR                     
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary" role="alert">
+                <RadzenIcon Icon="autorenew"/>
+                <span>1/Xác nhận nhân viên ABR</span>
+                </div>
+            }
+            
+        </td>
+        <td width="20%" style="text-align:center; vertical-align:central">
+            @if(DaUploadBangDanhGia)
+            {
+                <div class="alert alert-primary" role="alert">                                
+                    <RadzenIcon Icon="check_circle"/>                    
+                    2/Đã xác nhận mức hưởng ABR
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary" role="alert">
+                <RadzenIcon Icon="autorenew"/>
+                <span>2/Xác nhận mức hưởng ABR</span>
+                </div>
+            }
+            
+        </td>
+        <td width="20%" style="text-align:center">
+            @if(DaTinhABR)
+            {                
+                <div class="alert alert-primary" role="alert">
+                <RadzenIcon Icon="check_circle"/>
+                    3/Đã tính ABR
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary" role="alert">
+                <RadzenIcon Icon="autorenew"/>
+                <span>3/Tính ABR</span>
+                </div>
+            }
+            
+        </td>      
+        <td width="20%" style="text-align:center">
+            @if (DaXetDuyet2)
+            {
+                <div class="alert alert-primary" role="alert">
+                    <RadzenIcon Icon="check_circle" />
+                    4/Đã xét duyệt mức 2
+                </div>
+            }
+            else if (DaXetDuyet1)
+            {
+                <div class="alert alert-primary" role="alert">
+                    <RadzenIcon Icon="check_circle" />
+                    4/Đã xét duyệt mức 1
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary" role="alert">
+                    <RadzenIcon Icon="autorenew" />
+                    <span> 4/Xét duyệt</span>
+                </div>
+            }
+        </td>
+        <td width="20%" style="text-align:center">
+            @if(DaXetDuyet2)
+            {
+                <div class="alert alert-primary" role="alert">
+                <RadzenIcon Icon="check_circle"/>
+                    5/Xuất ABR qua bảng lương.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-secondary" role="alert">
+                <RadzenIcon Icon="autorenew"/>
+                <span> Sẵn sàng</span>
+                </div>
+            }            
+        </td>
+    </tr>
+</table>
+
+@code {
+    [Parameter]
+    public int Thang { get; set; }
+    [Parameter]
+    public int Nam { get; set; }
+    [Parameter]
+    public bool DaTinhSoLuong { get; set; }
+    [Parameter]
+    public bool DaUploadBangDanhGia { get; set; }
+    [Parameter]
+    public bool DaTinhABR { get; set; }
+    [Parameter]
+    public bool DaXetDuyet1 { get; set; }
+    [Parameter]
+    public bool DaXetDuyet2 { get; set; }
+    [Parameter]
+    public string MaBenhVien { get; set; } = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await benhVienClient.getBenhVienDangLamViec();
+        await base.OnInitializedAsync();   
+    }
+    
+
+    protected override async void OnParametersSet()
+    {
+        await CheckTinhTrang();
+    }
+
+    public async Task CheckTinhTrang()
+    {
+        DaTinhSoLuong = await aBRClient.CheckDaTinhSoLuongABR(Thang, Nam);
+        DaUploadBangDanhGia = await aBRClient.CheckDaUploadBangDanhGia(Thang, Nam);
+        DaTinhABR = await aBRClient.CheckDaTinhABR(Thang, Nam);
+        DaXetDuyet1 = await aBRClient.CheckDaXetDuyet(Thang, Nam, 1, MaBenhVien);
+        DaXetDuyet2 = await aBRClient.CheckDaXetDuyet(Thang, Nam, 2, MaBenhVien);
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+
+}

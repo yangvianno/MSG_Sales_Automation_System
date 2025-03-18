@@ -1,0 +1,356 @@
+﻿@using System.Data
+@model DataTable    
+
+
+@{
+    bool TinhTong = false;
+    bool TangGiamTuan = false;
+    bool TangGiamNam = false;
+    if (ViewData.ContainsKey("TinhTong"))
+    {
+        if (ViewData["TinhTong"].ToString()=="true")
+        {
+            TinhTong = true;
+        }
+    }
+    if (ViewData.ContainsKey("TangGiamTuan"))
+    {
+        if (ViewData["TangGiamTuan"].ToString()=="true")
+        {
+            TangGiamTuan = true;
+        }
+    }
+    if (ViewData.ContainsKey("TangGiamNam"))
+    {
+        if (ViewData["TangGiamNam"].ToString()=="true")
+        {
+            TangGiamNam = true;
+        }
+    }
+    List<string> RowNotSum = new List<string>();
+    RowNotSum.Add("303");
+    List<string> Rowhl = new List<string>();
+    Rowhl.Add("303");
+
+    string TenCot1 = "";
+    string TenCot2 = "";
+    string TenCot3 = "";
+    int[] Cot1 = new int[100];
+    int[] Cot2 = new int[100];
+    int[] Cot3 = new int[100];
+    int LuuCot1 = 1;
+    int LuuCot2 = 1;
+    int LuuCot3 = 1;
+    int i = 1;
+    foreach (DataRow row in Model.Rows)
+    {
+        if (TenCot1 != row["Nhom1"].ToString())
+        {
+            if (TenCot1 != "")
+            {
+                Cot1[LuuCot1] = i - LuuCot1;
+            }
+            TenCot1 = row["Nhom1"].ToString();
+            LuuCot1 = i;
+        }
+
+        if (TenCot2 != row["Nhom2"].ToString())
+        {
+            if (TenCot2 != "")
+            {
+                Cot2[LuuCot2] = i - LuuCot2;
+            }
+            TenCot2 = row["Nhom2"].ToString();
+            LuuCot2 = i;
+        }
+
+        if (TenCot3 != row["Nhom3"].ToString())
+        {
+            if (TenCot3 != "")
+            {
+                Cot3[LuuCot3] = i - LuuCot3;
+            }
+            TenCot3 = row["Nhom3"].ToString();
+            LuuCot3 = i;
+        }
+        i++;
+    }
+
+    if (TenCot1 != "")
+    {
+        Cot1[LuuCot1] = i - LuuCot1;
+    }
+    if (TenCot2 != "")
+    {
+        Cot2[LuuCot2] = i - LuuCot2;
+    }
+    if (TenCot3 != "")
+    {
+        Cot3[LuuCot3] = i - LuuCot3;
+    }
+}
+
+<table style="border: 1px solid black; border-collapse: collapse">
+    <tr style="background-color:#00C489;">
+        <td colspan=4> Bệnh viện </td>
+        @{
+            int SoCot = 1;
+            List<string> CacNgay = new List<string>();
+
+        }
+        @foreach (DataColumn col in Model.Columns)
+        {
+            if (SoCot >=3)
+            {
+                if (col.ColumnName != "STT" && col.ColumnName != "Nhom4" && col.ColumnName != "Nhom3" && col.ColumnName != "Nhom2" && col.ColumnName != "Nhom1")
+                {
+                    <td style="border: 1px solid black; border-collapse: collapse"> @col.ColumnName </td>
+                    CacNgay.Add(col.ColumnName);
+                    @if (TangGiamTuan && col.ColumnName=="Tuần trước")
+                    {
+                        <td style="color:#090909; border: 1px solid black; border-collapse: collapse"> Tăng/giảm </td>
+                    }
+                }
+            }
+            SoCot++;            
+        }
+        @if(TinhTong)
+        {
+            <td style="border: 1px solid black; border-collapse: collapse"> Cộng </td>
+        }
+        @if(TangGiamNam)
+        {
+            <td style="color:#090909; border: 1px solid black; border-collapse: collapse"> Tăng/giảm </td>
+        }
+
+    </tr>
+    @{
+        i = 1;
+    }
+    @foreach (DataRow row in Model.Rows)
+    {
+        <tr>
+            @if (Cot1[i] != 0)
+            {
+                @Html.Raw("<td rowspan=" + @Cot1[i] + " style=\"background-color:#26C489; border: 1px solid black; border - collapse: collapse;  padding: 4px;\">" + @row["Nhom1"].ToString() + "</td>")
+            }
+
+            @if (Cot2[i] != 0)
+            {
+                @Html.Raw("<td rowspan=" + Cot2[i])
+                @if (row["Nhom3"].ToString() == "")
+                {
+                    @(" colspan=3")
+                }
+                @if (row["Nhom2"].ToString() == "Nội trú (IPD)" || row["Nhom2"].ToString() == "Ngoại trú (OPD)" || row["Nhom2"].ToString() == "Tổng cộng" || row["Nhom2"].ToString().ToLower() == "doanh thu")
+                {
+                    @Html.Raw(" style=\"background-color:#00B0F0;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">");
+                }
+                else
+                {
+                    @Html.Raw(" style=\"background-color:#DBF6ED;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">");            
+                }
+                @row["Nhom2"].ToString()
+                @Html.Raw("</td>")
+            }
+
+            @if (Cot3[i] != 0)
+            {
+                @Html.Raw("<td rowspan=" + Cot3[i])
+                @if (row["Nhom4"].ToString() == "")
+                {
+                    @Html.Raw(" colspan=2 ")
+                }
+                @if (row["Nhom3"].ToString().IndexOf("Tổng cộng")>=0)
+                {
+                    if (row["Nhom2"].ToString() == "Nội trú (IPD)" || row["Nhom2"].ToString() == "Ngoại trú (OPD)" || row["Nhom2"].ToString() == "Tổng cộng" || row["Nhom2"].ToString().ToLower() == "doanh thu")
+                    {
+                        @Html.Raw(" style=\"background-color:#00B0F0;color:Snow;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">" + row["Nhom3"].ToString() + "</td>")
+                    }
+                    else
+                    {
+                        @Html.Raw(" style=\"background-color:SteelBlue;color:Snow;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">" + row["Nhom3"].ToString() + "</td>")
+                    }
+                }else if (row["Nhom3"].ToString()=="% OP/IP conversion")
+                {
+                    @Html.Raw(" style=\"background-color:#00B0F0;border: 1px solid black; border - collapse: collapse;  padding: 4px; text-align: right; font-style: italic\">" + row["Nhom3"].ToString() + "</td>") 
+                }
+                else
+                {
+                    @Html.Raw(" style=\"background-color:#DBF6ED;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">" + row["Nhom3"].ToString() + "</td>")
+                }
+
+                //@(row["Nhom3"].ToString() == "" ? @Html.Raw("<td style=\"background-color: #DBF6ED;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"></td>") : "")
+            }
+
+            @(row["Nhom4"].ToString() != "" ? @Html.Raw("<td style=\"border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> " + row["Nhom4"].ToString() + "</td>") : "")
+            @{
+                double Tong = 0;
+            }
+            @for (int x = 0; x < CacNgay.Count; x++)
+            {
+                string Nghieng = "";
+                string Mau = "blue";
+                @if (row["Nhom3"].ToString() == "% OP/IP conversion" || row["Nhom3"].ToString().IndexOf("% Lasik") >= 0 || row["Nhom3"].ToString().IndexOf("% Phaco") >= 0)
+                {
+                    Nghieng = "font-style: italic;";
+                }
+
+                @if (CacNgay[x].ToString().IndexOf("trước") >= 0 ||  CacNgay[x].ToString().IndexOf("LY") >= 0)
+                {
+                    Mau = "#898989";
+                }
+
+                @if (row[CacNgay[x]].ToString() != "")
+                {
+                    Tong += double.Parse(row[CacNgay[x]].ToString());                    
+                    @if (row["Nhom3"].ToString().IndexOf("Tổng cộng")>=0)
+                    {
+                        if (row["Nhom2"].ToString() == "Nội trú (IPD)" || row["Nhom2"].ToString() == "Ngoại trú (OPD)" || row["Nhom2"].ToString() == "Tổng cộng" || row["Nhom2"].ToString().ToLower() == "doanh thu")
+                        {
+                            @Html.Raw("<td style=\"background-color:#00B0F0;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">")
+
+                        }
+                        else
+                        {
+                            @Html.Raw("<td style=\"background-color:SteelBlue;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">")            
+
+                        }
+                
+                        @Html.Raw(double.Parse(row[CacNgay[x]].ToString()).ToString("###,##0"))
+                        @Html.Raw("</td>")
+                    }
+                    else
+                    {
+                
+                        @if (row["Nhom3"].ToString() == "% OP/IP conversion")
+                        {
+                            @Html.Raw("<td style=\"color:"+ Mau +";text-align:right;border: 1px solid black; border - collapse: collapse;  padding: 4px; font-style: italic\">")
+                            @(double.Parse(row[CacNgay[x]].ToString()).ToString("###,##0.0")+"%")
+                        }
+                        else if (row["Nhom3"].ToString().IndexOf("%")>=0)
+                        {
+                            @Html.Raw("<td style=\"color:"+ Mau +";text-align:right;border: 1px solid black; border - collapse: collapse;  padding: 4px; "+Nghieng+"\">")
+                            @(double.Parse(row[CacNgay[x]].ToString()).ToString("###,##0")+"%")
+                        }
+                        else
+                        {
+                            @Html.Raw("<td style=\"color:"+ Mau +";text-align:right;border: 1px solid black; border - collapse: collapse;  padding: 4px;\">")
+                            @(double.Parse(row[CacNgay[x]].ToString()).ToString("###,##0"))
+                        }
+                        @Html.Raw("</td>")
+                    }
+                }
+                else
+                {
+                    @if (row["Nhom3"].ToString().IndexOf("Tổng cộng")>=0)
+                    {
+                        if (row["Nhom2"].ToString() == "Nội trú (IPD)" || row["Nhom2"].ToString() == "Ngoại trú (OPD)" || row["Nhom2"].ToString() == "Tổng cộng" || row["Nhom2"].ToString().ToLower() == "doanh thu")
+                        {
+                            @Html.Raw("<td style=\"background-color:#00B0F0;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> 0 </td>")
+                        }
+                        else
+                        {
+                            @Html.Raw("<td style=\"background-color:SteelBlue;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> 0 </td>")
+                        }
+                    }
+                    else if (row["Nhom3"].ToString()=="% OP/IP conversion")
+                    {
+                        @Html.Raw("<td style=\"color:"+ Mau +";text-align:right;border: 1px solid black; border - collapse: collapse;  padding: 4px; font-style: italic\"> 0.0% </td>")
+                    }
+                    else if (row["Nhom3"].ToString().IndexOf("%")>=0)
+                    {
+                        @Html.Raw("<td style=\"color:"+ Mau +";text-align:right;border: 1px solid black; border - collapse: collapse;  padding: 4px; " + Nghieng + "\"> 0% </td>")
+                    }
+                    else
+                    {
+                        @Html.Raw("<td style=\"color:"+ Mau +";text-align:right;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> 0 </td>")
+                    }
+                }
+
+                @if(TangGiamTuan && CacNgay[x]=="Tuần trước")
+                {
+                    double TangGiam = 0;
+                    @if (Model.Columns.Contains("Tuần này"))
+                    {                        
+                        TangGiam = (double.Parse(row["Tuần này"].ToString() == "" ? "0" : row["Tuần này"].ToString()) - double.Parse(row["Tuần trước"].ToString() == "" ? "0" : row["Tuần trước"].ToString()));
+                    }
+                    else if (Model.Columns.Contains("Cộng"))
+                    {
+                        TangGiam = (double.Parse(row["Cộng"].ToString() == "" ? "0" : row["Cộng"].ToString()) - double.Parse(row["Tuần trước"].ToString() == "" ? "0" : row["Tuần trước"].ToString()));
+                    }
+
+                    @if (row["Nhom3"].ToString().IndexOf("Tổng cộng")>=0)
+                    {
+                        if (row["Nhom2"].ToString() == "Nội trú (IPD)" || row["Nhom2"].ToString() == "Ngoại trú (OPD)" || row["Nhom2"].ToString() == "Tổng cộng" || row["Nhom2"].ToString().ToLower() == "doanh thu")
+                        {
+                            @Html.Raw("<td style=\"background-color:#00B0F0;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> "+TangGiam.ToString("###,##0;(#,#)") +" </td>")
+                        }
+                        else
+                        {
+                            @Html.Raw("<td style=\"background-color:SteelBlue;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> "+TangGiam.ToString("###,#;(#,#)") +" </td>")
+                        }
+                    } else if (row["Nhom3"].ToString() == "% OP/IP conversion")
+                    {
+                        <td style="color:#898989;text-align:right; border: 1px solid black; border - collapse: collapse;  padding: 4px; font-style: italic"> 
+                            @(TangGiam.ToString("###,##0.0")+"%")
+                        </td>
+                    }
+                    else if (row["Nhom3"].ToString().IndexOf("%")>=0)
+                    {
+                        <td style="color:#898989;text-align:right; border: 1px solid black; border - collapse: collapse;  padding: 4px;"> 
+                            @(Math.Round(TangGiam,0)==0? "0%" : Math.Round(TangGiam,0).ToString("###,##0")+"%")
+                        </td>
+                    }
+                    else
+                    {
+                        <td style="color:#898989;text-align:right; border: 1px solid black; border - collapse: collapse;  padding: 4px;"> 
+                            @(TangGiam.ToString("###,##0;(###,#)"))
+                        </td>
+                    }
+                } 
+            } 
+            @if(TangGiamNam)
+            {
+
+                double TangGiam = 0;
+                if (row.Table.Columns.Contains("YTD")
+                    && row.Table.Columns.Contains("LY"))
+                {
+                    TangGiam =(double.Parse(row["YTD"].ToString() == "" ? "0" : row["YTD"].ToString()) - double.Parse(row["LY"].ToString() == "" ? "0" : row["LY"].ToString()));
+                }
+                @if (row["Nhom3"].ToString().IndexOf("Tổng cộng")>=0)
+                {
+                    if (row["Nhom2"].ToString() == "Nội trú (IPD)" || row["Nhom2"].ToString() == "Ngoại trú (OPD)" || row["Nhom2"].ToString() == "Tổng cộng" || row["Nhom2"].ToString().ToLower() == "doanh thu")
+                    {
+                        @Html.Raw("<td style=\"background-color:#00B0F0;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> "+TangGiam.ToString("###,##0;(###,#)") +" </td>")
+                    }
+                    else
+                    {
+                        @Html.Raw("<td style=\"background-color:SteelBlue;color:Snow;text-align:right;font-weight:bold;border: 1px solid black; border - collapse: collapse;  padding: 4px;\"> "+TangGiam.ToString("###,##0;(###,#)") +" </td>")
+                    }
+                } else if (row["Nhom3"].ToString() == "% OP/IP conversion")
+                {
+                    <td style="color:#898989;text-align:right; border: 1px solid black; border - collapse: collapse;  padding: 4px;"> 
+                        @(TangGiam.ToString("###,##0.0")+"%")
+                    </td>
+                }
+                else if (row["Nhom3"].ToString().IndexOf("%")>=0)
+                {
+                    <td style="color:#898989;text-align:right; border: 1px solid black; border - collapse: collapse;  padding: 4px;"> 
+                        @(TangGiam.ToString("###,##0")+"%")
+                    </td>
+                }
+                else
+                {
+                    <td style="color:#898989;text-align:right; border: 1px solid black; border - collapse: collapse;  padding: 4px;"> 
+                        @(TangGiam.ToString("###,##0;(###,###)"))
+                    </td>
+                }
+            } 
+                    
+        </tr>
+        i++;
+    }
+
+</table>

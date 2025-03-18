@@ -1,0 +1,319 @@
+﻿@using Radzen.Blazor
+@using SalesAuto.Models.Entities
+@using SalesAuto.Wasm.Services
+@using SalesAuto.Models.ViewModel
+@using SalesAuto.Wasm.Components
+
+@inject IABRClient aBRClient
+@inject IToastService toastService
+@inject DialogService dialogService
+@inject ICommonUI commonUI
+@inject IBenhVienClient benhVienClient
+@inject IExportFile exportFile
+@inject IJSRuntime jsRuntime
+
+@if (listChiTiet!=null)
+{
+    <RadzenButton Text="Excel" Icon="grid_on" Click="Export" Style="margin-bottom:20px" />
+    <RadzenDataGrid @ref="danhMucGridChiTiet" AllowFiltering="true" AllowPaging="true" PageSize="40" AllowSorting="true"
+        EditMode="DataGridEditMode.Single"
+        AllowColumnResize="true"
+        FilterMode="FilterMode.Simple"
+        FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+        Data="@listChiTiet" TItem="AbrSoSanhChiTietVM">
+        <Columns>
+            <RadzenDataGridColumn Width="70px" TItem="AbrSoSanhChiTietVM" Property="MaNhanVien" Title="STT" TextAlign="TextAlign.Center">
+                <Template Context="data">
+                @(listChiTiet.IndexOf(data) + 1 +"/" +listChiTiet.Count)
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="110px" TItem="AbrSoSanhChiTietVM" Property="MaNhanVien" Title="Mã">
+                <Template Context="data">
+                    <button type="button" class="btn btn-link btn-outline-dark" @onclick="@(async (args) => await ShowChiTiet(@data.MaNhanVien))">
+                    @(data.MaNhanVien) 
+                    </button>                    
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="AbrSoSanhChiTietVM" Property="TenNhanVien" Title="Họ tên">         
+                <Template Context="data">
+                    <span @onclick="@(async (args) => await ShowChiTiet(@data.MaNhanVien))">
+                        @(data.TenNhanVien)
+                    </span>                
+                </Template>
+            </RadzenDataGridColumn>            
+            <RadzenDataGridColumn TItem="AbrSoSanhChiTietVM" Property="ChucDanh" Title="Chức danh">                
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="120px" TItem="AbrSoSanhChiTietVM" Property="ABRThangNay" Title="Abr tháng này" TextAlign="TextAlign.Right">
+                <Template Context="row">
+                    @row.ABRThangNay.ToString("##,#")
+                </Template>
+                <FooterTemplate>
+                <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listChiTiet.Sum(o => o.ABRThangNay))</b>
+                </FooterTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="120px" TItem="AbrSoSanhChiTietVM" Property="ABRThangTruoc" Title="ABR tháng trước" TextAlign="TextAlign.Right">
+                <Template Context="row">
+                    @row.ABRThangTruoc.ToString("##,#")
+                </Template>
+                <FooterTemplate>
+                <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listChiTiet.Sum(o => o.ABRThangTruoc))</b>
+                </FooterTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="120px" TItem="AbrSoSanhChiTietVM" Property="TangGiam" Title="Tăng/giảm" TextAlign="TextAlign.Right">
+                <Template Context="row">
+                    @if(@row.TangGiam != 0 && @row.ABRThangNay != 0)
+                    {
+                        @if (Math.Abs(@row.TangGiam/@row.ABRThangNay)>=(decimal)0.25)
+                        {
+                            <span class="text-danger font-weight-bold">
+                                @(row.TangGiam.ToString("##,#"))
+                            </span>
+                        }
+                        else
+                        {
+                            @(row.TangGiam.ToString("##,#"))
+                        }
+                    }
+                    else
+                    {
+                        @(row.TangGiam.ToString("##,#"))
+                    }
+                </Template>
+                <FooterTemplate>
+                    @if (listChiTiet.Sum(o => o.ABRThangNay) >0 && Math.Abs(listChiTiet.Sum(o => o.TangGiam)/listChiTiet.Sum(o => o.ABRThangNay))>=(decimal)0.25)
+                        {
+                            <span class="text-danger font-weight-bold">
+                                <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listChiTiet.Sum(o => o.TangGiam))</b>
+                            </span>
+                        }
+                        else
+                        {
+                        <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listChiTiet.Sum(o => o.TangGiam))</b>
+                        }
+                </FooterTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="110px" TItem="AbrSoSanhChiTietVM" Property="DieuChinh" Title="Điều chỉnh" TextAlign="TextAlign.Right">
+                <Template Context="item">                    
+
+                    @if(listDieuChinh!=null)
+                    {
+                        var found = listDieuChinh.Find(x => x.MaNhanVien == item.MaNhanVien);
+                        if (found != null)
+                        {
+                            @found.DieuChinh.ToString("##,#")        
+                        }
+                    }                         
+                </Template>
+                <EditTemplate >
+                    <RadzenNumeric @bind-Value="DieuChinhTam" Style="width: 100%; text-align:left; display: block" Name="QuyRa"  />
+                </EditTemplate>
+                <FooterTemplate>
+                    @if(listDieuChinh != null)
+                    {
+                        <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listDieuChinh.Sum(o => o.DieuChinh))</b>
+                    }
+                </FooterTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Width="110px" TItem="AbrSoSanhChiTietVM" Property="DieuChinh" Title="Abr sau DC" TextAlign="TextAlign.Right">
+                <Template Context="item"> 
+                    @if(listDieuChinh!=null)
+                    {
+                        var found = listDieuChinh.Find(x => x.MaNhanVien == item.MaNhanVien);
+                        if (found != null)
+                        {                            
+                            @((found.DieuChinh + item.ABRThangNay).ToString("##,#"))                            
+                        }                        
+                        else
+                        {
+                            <span>
+                            @(item.ABRThangNay.ToString("##,#"))
+                            </span>
+                        }
+                    }
+                    else
+                    {
+                        @(item.ABRThangNay.ToString("##,#"))
+                    }
+                </Template>               
+                <FooterTemplate>
+                    @if(listDieuChinh != null)
+                    {
+                        <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listDieuChinh.Sum(o => o.DieuChinh)+listChiTiet.Sum(o => o.ABRThangNay))</b>
+                    }
+                    else
+                    {
+                        <b>@String.Format(new System.Globalization.CultureInfo("en-US"), "{0:##,#}", listChiTiet.Sum(o => o.ABRThangNay))</b>
+                    }
+                </FooterTemplate>
+            </RadzenDataGridColumn>
+            <AuthorizeView Roles="abrTinhABR">
+                @if (!DaXetDuyet)
+                {
+                    <RadzenDataGridColumn TItem="AbrSoSanhChiTietVM" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="70px">
+                        <Template Context="item">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Small" Visible=@(!DaXetDuyet) Click="@(async (args) => await EditRow(item))" @onclick:stopPropagation="true">
+                        </RadzenButton>                          
+                    </Template>
+                    <EditTemplate Context="item">
+                        <RadzenButton Icon="save" Size="ButtonSize.Small" Visible=@(!DaXetDuyet) Click="@(async (args) => await SaveRow(item))">
+                        </RadzenButton>
+                        <RadzenButton Icon="cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Click="@(async (args) => await CancelEdit(item))">
+                        </RadzenButton>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                }
+            </AuthorizeView>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    <span>
+        Loading...
+    </span>
+
+}
+
+
+@code {
+    [CascadingParameter]
+    public IModalService Modal { get; set; }
+    [Parameter]
+    public int Thang { get; set; }
+    [Parameter]
+    public int Nam { get; set; }
+    [Parameter]
+    public bool DaXetDuyet { get; set; }
+    [Parameter]
+    public bool DaTinhABR { get; set; }
+    [Parameter]
+    public string MaBenhVien { get; set; } = "";
+    decimal DieuChinhTam = 0;
+
+    private RadzenDataGrid<AbrSoSanhChiTietVM> danhMucGridChiTiet;
+    private List<AbrSoSanhChiTietVM> listChiTiet;
+    private List<ABRDieuChinh> listDieuChinh;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await benhVienClient.getBenhVienDangLamViec();
+        await base.OnInitializedAsync();        
+    }
+
+
+
+    protected override async void OnParametersSet()
+    {
+        await LoadDanhSachChiTiet();
+    }
+    public async Task LoadDanhSachChiTiet()
+    {               
+        listChiTiet = await aBRClient.GetABRSoSanhChiTiet(Thang,Nam, MaBenhVien);
+        listDieuChinh = await aBRClient.GetABRDieuChinh(Thang,Nam);
+        await CapNhapSauDieuChinh();
+        DaXetDuyet = await aBRClient.CheckDaXetDuyet(Thang, Nam, 1, MaBenhVien);
+        StateHasChanged();
+    }
+
+    private async Task CapNhapSauDieuChinh()
+    {
+        if(listDieuChinh!=null)
+        {
+            if (listChiTiet !=null)
+            {
+                foreach(var item in listChiTiet)
+                {
+                    var found = listDieuChinh.Find(x => x.MaNhanVien == item.MaNhanVien);
+
+                    if (found != null)
+                    {
+                        item.DieuChinh = found.DieuChinh;
+                        item.SauDieuChinh = found.DieuChinh + item.ABRThangNay;
+                    }
+                    else
+                    {
+                        item.DieuChinh = 0;
+                        item.SauDieuChinh = item.ABRThangNay;
+                    }
+                }
+            }
+        }   
+    }
+
+    async Task EditRow(AbrSoSanhChiTietVM item)
+    {   
+        if(listDieuChinh!=null)
+        {
+            var found = listDieuChinh.Find(x => x.MaNhanVien == item.MaNhanVien);
+            if (found != null)
+            {
+                DieuChinhTam = found.DieuChinh;
+            }
+        } 
+        await danhMucGridChiTiet.EditRow(item);
+    }
+
+    async Task CancelEdit (AbrSoSanhChiTietVM item)
+    {
+        danhMucGridChiTiet.CancelEditRow(item);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task SaveRow(AbrSoSanhChiTietVM item)
+    {
+        commonUI.BusyDialog(dialogService, "Đang lưu...");
+        try
+        {
+
+            var it = new ABRDieuChinh();
+            it.Thang = Thang;
+            it.Nam = Nam;
+            it.DieuChinh = DieuChinhTam;
+            it.MaNhanVien = item.MaNhanVien;
+            var kq = await aBRClient.SaveABRDieuChinh(it);
+            if (kq)
+            {
+                var found = listDieuChinh.Find(x => x.MaNhanVien == item.MaNhanVien);
+                if (found != null)
+                {
+                    found.DieuChinh = it.DieuChinh;
+                }
+                else
+                {
+                    listDieuChinh.Add(it);
+                }
+                await CapNhapSauDieuChinh();
+                toastService.ShowSuccess("Lưu điều chỉnh" + item.TenNhanVien + " thành công !");
+            }
+            else
+            {
+                toastService.ShowError("Lưu điều chỉnh" + item.TenNhanVien + " bị lỗi");
+            }
+            await danhMucGridChiTiet.UpdateRow(item);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        dialogService.Close();
+    }
+
+    public async Task ShowChiTiet(string MaNhanVien)
+    {
+        var parameters = new ModalParameters();
+        var options = new ModalOptions() { ContentScrollable = true };
+        parameters.Add("MaNhanVien", MaNhanVien);
+        parameters.Add("Thang", Thang);
+        parameters.Add("Nam", Nam);
+        var result = Modal.Show<ABRChiTietNhanVienCom>("Bảng ABR chi tiết", parameters, options);
+        await result.Result;
+    }
+    private async Task Export()
+    {
+        var pkg = await exportFile.SaveFile(listChiTiet);
+        var fileBytes = pkg.GetAsByteArray();
+        pkg.Dispose();
+        var fileName = $"BaoCao.xlsx";
+        await jsRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+    }
+}
